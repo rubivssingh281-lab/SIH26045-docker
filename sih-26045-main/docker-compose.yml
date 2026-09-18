@@ -1,0 +1,75 @@
+# IP-SAKTI Sahayak — full stack for other teams.
+#
+#   docker compose up --build
+#
+#   Frontend : http://localhost:3000
+#   Backend  : http://localhost:8000
+#   Ollama   : http://localhost:11434
+#
+# On first run the "ollama-pull" service downloads the LLM (LLM_MODEL, default
+# gemma4:e4b ~9 GB). Use a lighter model instead:
+#   Linux/macOS:  LLM_MODEL=phi3 docker compose up --build
+#   Windows cmd:  set LLM_MODEL=phi3&& docker compose up --build
+#
+# Requires backend/.env to exist (copy backend/.env.example -> backend/.env and
+# fill in the GEMINI_API_KEY + mail settings). The app still runs if the LLM model
+# isn't ready — it falls back to deterministic, evidence-based answers.
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ipsakti-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
+  # One-shot: waits for Ollama, then pulls the configured model into the shared volume.
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: ipsakti-ollama-pull
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    entrypoint: >
+      /bin/sh -c "echo 'Waiting for Ollama...';
+      until ollama list >/dev/null 2>&1; do sleep 2; done;
+      echo 'Pulling ${LLM_MODEL:-gemma4:e4b} (first run may take a while)...';
+      ollama pull ${LLM_MODEL:-gemma4:e4b};
+      echo 'Model ready.'"
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ipsakti-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      # Reach the Ollama container by service name, and pick the model.
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      LLM_MODEL: "${LLM_MODEL:-gemma4:e4b}"
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./IP-SAKTI-frontend/frontend-koutsa
+    container_name: ipsakti-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # The browser (not the container) calls the backend, so use the host URL.
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"
+      NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  ollama-models:

@@ -1,0 +1,33 @@
+# DEVELOPMENT overlay — live code editing with hot-reload.
+#
+# Run WITH the base file (both -f flags, in this order):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# Now edits saved on the host under ./backend and
+# ./IP-SAKTI-frontend/frontend-koutsa are picked up LIVE inside the running
+# containers — the backend (uvicorn --reload) and the Next.js dev server both
+# rebuild automatically, with NO image rebuild needed.
+#
+# Notes:
+# - node_modules and .next are kept INSIDE the container (anonymous volumes) so the
+#   host's OS-specific/absent copies never clobber the ones the image installed.
+# - Polling env vars make file-change watching reliable across Docker bind mounts
+#   on Windows/macOS (host FS events don't always reach the Linux container).
+
+services:
+  backend:
+    volumes:
+      - ./backend:/app                       # live backend source (+ chroma_db)
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"       # reliable uvicorn --reload over bind mounts
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app"]
+
+  frontend:
+    volumes:
+      - ./IP-SAKTI-frontend/frontend-koutsa:/app   # live frontend source
+      - /app/node_modules                          # keep container's node_modules
+      - /app/.next                                 # keep container's build cache
+    environment:
+      WATCHPACK_POLLING: "true"              # Next.js/webpack file watching over bind mount
+      CHOKIDAR_USEPOLLING: "true"
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"

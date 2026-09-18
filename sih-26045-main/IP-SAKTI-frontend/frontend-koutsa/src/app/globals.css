@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: #f7f4ec;
+  --ink: #121d26;
+  --forest: #123c32;
+  --emerald: #176b5b;
+  --navy: #172a46;
+  --gold: #c58b2a;
+  --line: #e4e7eb;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--canvas); min-height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: "Manrope", Arial, sans-serif;
+}
+
+button, input, textarea, select { font: inherit; }
+
+::selection { background: #c0ecdd; color: #002019; }
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5df; border-radius: 999px; }
+
+.serif { font-family: "DM Serif Display", Georgia, serif; }
+
+.botanical {
+  position: relative;
+  overflow: hidden;
+}
+.botanical::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  bottom: -12px;
+  width: 150px;
+  height: 120px;
+  opacity: .65;
+  background:
+    radial-gradient(ellipse at 80% 100%, transparent 48%, #dce2e5 49%, transparent 51%),
+    radial-gradient(ellipse at 60% 100%, transparent 48%, #dce2e5 49%, transparent 51%),
+    radial-gradient(ellipse at 40% 100%, transparent 48%, #dce2e5 49%, transparent 51%);
+  pointer-events: none;
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-white shadow-soft;
+  }
+  .eyebrow {
+    @apply text-[11px] font-bold uppercase tracking-[0.14em] text-navy/70;
+  }
+  .muted {
+    @apply text-sm text-ink/65;
+  }
+}

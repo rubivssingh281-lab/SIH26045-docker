@@ -1,0 +1,50 @@
+{
+  "jurisdiction_name": "India",
+  "patentability_framework": {
+    "statement": "Patentability is governed by the Patents Act, 1970. Section 3(d) restricts patents on new forms of known substances without enhanced efficacy, and Section 3(p) excludes inventions that are, in effect, traditional knowledge or an aggregation of known traditional-knowledge properties.",
+    "citation": "Patents Act, 1970 (ss. 3(d), 3(p))",
+    "verified": true
+  },
+  "traditional_knowledge_relevance": {
+    "statement": "Traditional knowledge is directly relevant. An invention that is traditional knowledge, or an aggregation/duplication of the known properties of traditionally-known components, is not patentable under Section 3(p). This is a case-specific determination, not an automatic bar on every traditional formulation.",
+    "citation": "Patents Act, 1970 (s. 3(p))",
+    "verified": true
+  },
+  "prior_art_treatment": {
+    "statement": "The Traditional Knowledge Digital Library (TKDL) is recognised by the Indian Patent Office as documented prior art. A TKDL match can defeat novelty and inventive step for the disclosed formulation.",
+    "citation": "TKDL – Indian Patent Office prior-art database",
+    "verified": true
+  },
+  "disclosure_requirements": {
+    "statement": "Section 10(4) requires disclosure of the source and geographical origin of any biological material used in the invention in the patent specification.",
+    "citation": "Patents Act, 1970 (s. 10(4))",
+    "verified": true
+  },
+  "biodiversity_ABS_relevance": {
+    "statement": "Access to biological resources and associated traditional knowledge for commercial use is regulated. Approval / benefit-sharing under the Biological Diversity regime (as amended in 2023) may be required before grant.",
+    "citation": "Biological Diversity Act, 2002 as amended by the Biological Diversity (Amendment) Act, 2023",
+    "verified": true
+  },
+  "formulation_related_considerations": {
+    "statement": "Ayurvedic / classical formulations are assessed against the s. 3(p) traditional-knowledge bar and against TKDL prior art. A genuine, non-obvious technical modification with a demonstrated technical effect may still be patentable, subject to examination.",
+    "citation": "Patents Act, 1970 (ss. 2(1)(j), 3(p))",
+    "verified": true
+  },
+  "source_requirements": {
+    "statement": "Source and geographic origin of biological material must be disclosed; non-disclosure or wrongful disclosure is a ground for pre-/post-grant opposition and revocation.",
+    "citation": "Patents Act, 1970 (ss. 10(4), 25, 64)",
+    "verified": true
+  },
+  "official_sources": [
+    {"source_title": "Office of the Controller General of Patents, Designs and Trade Marks (IP India)", "source_type": "official", "jurisdiction": "India", "source_url": "https://ipindia.gov.in"},
+    {"source_title": "Traditional Knowledge Digital Library (TKDL)", "source_type": "official", "jurisdiction": "India", "source_url": "https://www.tkdl.res.in"},
+    {"source_title": "National Biodiversity Authority", "source_type": "official", "jurisdiction": "India", "source_url": "https://nbaindia.org"},
+    {"source_title": "The Patents Act, 1970 (India Code)", "source_type": "official", "jurisdiction": "India", "source_url": "https://www.indiacode.nic.in"}
+  ],
+  "limitations": [
+    "This is an AI-assisted information system, not legal advice.",
+    "Patentability is determined case-by-case by the Indian Patent Office on examination; retrieved prior art indicates relevance, not a final novelty conclusion.",
+    "Not every traditional formulation is automatically unpatentable; the s. 3(p) analysis is fact-specific."
+  ],
+  "last_verified": "2026-08-31"
+}

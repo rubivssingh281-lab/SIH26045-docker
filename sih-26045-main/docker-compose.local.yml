@@ -1,0 +1,39 @@
+# LOCAL run — for a machine that ALREADY has Ollama installed (reuses your host's
+# models, e.g. gemma4:e4b, with NO 9 GB re-download and no port clash).
+#
+#   docker compose -f docker-compose.local.yml up -d --build
+#
+#   Frontend: http://localhost:3000   Backend: http://localhost:8000
+#
+# Teammates WITHOUT native Ollama should use the self-contained docker-compose.yml
+# instead (it runs Ollama in a container and pulls the model automatically).
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: ipsakti-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      # Reach the Ollama running natively on the host (Docker Desktop maps this name).
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
+      LLM_MODEL: "${LLM_MODEL:-gemma4:e4b}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./IP-SAKTI-frontend/frontend-koutsa
+    container_name: ipsakti-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"
+      NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      - backend
+    restart: unless-stopped

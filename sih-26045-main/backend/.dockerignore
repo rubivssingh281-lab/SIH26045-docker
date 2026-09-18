@@ -1,0 +1,14 @@
+# Keep the image lean and free of secrets / regenerable files.
+.venv
+venv
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+app.db
+.env
+app/data/connectors.json
+tests
+*.md
+.git

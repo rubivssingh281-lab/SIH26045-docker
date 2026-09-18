@@ -1,0 +1,50 @@
+{
+  "jurisdiction_name": "International",
+  "patentability_framework": {
+    "statement": "There is no single 'international patent'. Patentability is decided by each national/regional patent office. International instruments set minimum standards and shared procedures but do not themselves grant patents. Actual requirements depend on the target country/region.",
+    "citation": "TRIPS Agreement (WTO); Patent Cooperation Treaty (WIPO)",
+    "verified": true
+  },
+  "traditional_knowledge_relevance": {
+    "statement": "Traditional knowledge is treated as prior art that can destroy novelty in most jurisdictions, but there is no universal statutory bar equivalent to India's Section 3(p). Treatment varies by country.",
+    "citation": "Not verified for any specific country; general international position",
+    "verified": false
+  },
+  "prior_art_treatment": {
+    "statement": "Documented traditional knowledge (including TKDL, where access has been granted to a patent office) can act as defeating prior art for novelty and non-obviousness. Whether a given office consults TKDL depends on bilateral access arrangements.",
+    "citation": "WIPO – traditional knowledge and prior art",
+    "verified": true
+  },
+  "disclosure_requirements": {
+    "statement": "Source / origin disclosure of genetic resources is being harmonised. The WIPO Treaty on Intellectual Property, Genetic Resources and Associated Traditional Knowledge (2024) introduces a disclosure requirement for participating members; applicability depends on ratification and the target office.",
+    "citation": "WIPO GRATK Treaty, 2024 (applicability depends on member state)",
+    "verified": true
+  },
+  "biodiversity_ABS_relevance": {
+    "statement": "Access-and-benefit-sharing obligations depend on whether the relevant country is a party to the Convention on Biological Diversity and the Nagoya Protocol, and on that country's implementing law.",
+    "citation": "Convention on Biological Diversity; Nagoya Protocol (party-dependent)",
+    "verified": true
+  },
+  "formulation_related_considerations": {
+    "statement": "Whether a herbal / traditional formulation is patentable varies by jurisdiction. Some offices are more permissive absent a Section 3(p)-style bar, but documented prior art (including TK) can still defeat novelty. Country-specific rules cannot be stated without selecting a target country.",
+    "citation": "Not verified for any specific country",
+    "verified": false
+  },
+  "source_requirements": {
+    "statement": "Source-disclosure and ABS-compliance requirements differ by country; some require declaration of origin, others do not. Confirm against the target office's rules.",
+    "citation": "Not verified for any specific country",
+    "verified": false
+  },
+  "official_sources": [
+    {"source_title": "World Intellectual Property Organization (WIPO)", "source_type": "official", "jurisdiction": "International", "source_url": "https://www.wipo.int"},
+    {"source_title": "Patent Cooperation Treaty (PCT) – WIPO", "source_type": "official", "jurisdiction": "International", "source_url": "https://www.wipo.int/pct/en/"},
+    {"source_title": "TRIPS Agreement – World Trade Organization", "source_type": "official", "jurisdiction": "International", "source_url": "https://www.wto.org"},
+    {"source_title": "Convention on Biological Diversity", "source_type": "official", "jurisdiction": "International", "source_url": "https://www.cbd.int"}
+  ],
+  "limitations": [
+    "International comparison provides a general international framework. Actual patentability and legal requirements depend on the target country/region.",
+    "No country-specific rule is asserted unless a target country has been explicitly selected and authoritative data exists.",
+    "No international ML risk score exists in the current model; only the India-side deterministic assessment carries a concern level."
+  ],
+  "last_verified": "2026-08-31"
+}

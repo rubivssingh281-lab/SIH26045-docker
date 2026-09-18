@@ -1,0 +1,36 @@
+# ---- Python / backend ----
+backend/.venv/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+backend/app.db          # SQLite dev DB — auto-created on first backend startup
+
+# ---- Node / frontend ----
+node_modules/
+IP-SAKTI-frontend/frontend-koutsa/.next/
+IP-SAKTI-frontend/frontend-koutsa/tsconfig.tsbuildinfo
+.pnpm-store/
+npm-debug.log*
+pnpm-debug.log*
+
+# ---- Secrets / local env ----
+backend/.env
+backend/app/data/connectors.json   # holds user-supplied paid-source API keys
+.env
+!.env.example
+!IP-SAKTI-frontend/frontend-koutsa/.env.local   # committed: safe local defaults (localhost)
+
+# ---- Editor / OS ----
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# NOTE: backend/chroma_db/ IS intentionally kept — it is the pre-built TKDL
+# search index so the app works without re-running ingestion.
+
+# ML training data/models � too large for GitHub (>100MB files); not needed at runtime
+ml_models/

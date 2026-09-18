@@ -1,0 +1,32 @@
+[
+  {
+    "id": "R-BDACT-ABS-POST",
+    "name": "Biodiversity Act ABS Post-2023",
+    "description": "Biological resources with commercial intent post 2023 require ABS approval.",
+    "conditions": [
+      {
+        "fact": "uses_biological_resource",
+        "op": "==",
+        "value": true
+      },
+      {
+        "fact": "commercial_intent",
+        "op": "==",
+        "value": true
+      }
+    ],
+    "conclusion": "ABS approval required (amended regime)",
+    "citation": "Biological Diversity (Amendment) Act 2023",
+    "priority": 100,
+    "explanation": "Since biological resources are used for commercial intent, ABS approval is strictly required under the amended regime."
+  },
+  {
+    "id": "rule_001",
+    "name": "default",
+    "description": "Fallback rule for unclassified case data.",
+    "conditions": [],
+    "conclusion": "ambiguous/insufficient_information",
+    "citation": "N/A",
+    "priority": 0
+  }
+]

@@ -1,0 +1,4 @@
+# Requirements for the Gemini translation module (app/translation/gemini_translator.py).
+# Install alongside the main backend requirements:  pip install -r requirements-translation.txt
+google-generativeai>=0.7.0
+python-dotenv>=1.0.1   # used to read GEMINI_API_KEY from backend/.env (already a project dep)

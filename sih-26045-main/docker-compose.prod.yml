@@ -1,0 +1,73 @@
+# IP-SAKTI Sahayak — Production docker-compose
+# Uses pre-built images from Docker Hub (no local build required)
+#
+#   docker compose -f docker-compose.prod.yml up --pull always
+#
+# Before running:
+#   1. Copy backend/.env.example to backend/.env
+#   2. Fill in GEMINI_API_KEY and mail settings
+#
+# Frontend : http://localhost:3000
+# Backend  : http://localhost:8000
+# Ollama   : http://localhost:11434
+#
+# To use a lighter LLM model instead of the default:
+#   Linux/macOS:  LLM_MODEL=phi3 docker compose -f docker-compose.prod.yml up
+#   Windows PowerShell:  $env:LLM_MODEL='phi3'; docker compose -f docker-compose.prod.yml up
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ipsakti-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
+  # One-shot: waits for Ollama, then pulls the configured model into the shared volume.
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: ipsakti-ollama-pull
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    entrypoint: >
+      /bin/sh -c "echo 'Waiting for Ollama...';
+      until ollama list >/dev/null 2>&1; do sleep 2; done;
+      echo 'Pulling ${LLM_MODEL:-gemma4:e4b} (first run may take a while)...';
+      ollama pull ${LLM_MODEL:-gemma4:e4b};
+      echo 'Model ready.'"
+    restart: "no"
+
+  backend:
+    image: sakshamsinghipsakti/ip-sakti-backend:latest
+    container_name: ipsakti-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      LLM_MODEL: "${LLM_MODEL:-gemma4:e4b}"
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    pull_policy: always
+
+  frontend:
+    image: sakshamsinghipsakti/ip-sakti-frontend:latest
+    container_name: ipsakti-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"
+      NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    pull_policy: always
+
+volumes:
+  ollama-models:
