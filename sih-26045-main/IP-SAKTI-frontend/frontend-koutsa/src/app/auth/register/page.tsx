@@ -31,9 +31,16 @@ export default function RegisterPage() {
     if (password !== confirmPassword) return setError("Passwords do not match.");
     setLoading(true);
     try {
-      const result = await authApi.register({ first_name: firstName.trim(), last_name: lastName.trim(), email: email.trim(), password });
+      const cleanEmail = email.trim().toLowerCase();
+      const result = await authApi.register({ first_name: firstName.trim(), last_name: lastName.trim(), email: cleanEmail, password });
       if (result.requires_otp) {
-        router.push(`/auth/verify?mode=register&email=${encodeURIComponent(email)}`);
+        // Demo mode (no mail configured): hand the code + notice to the verify screen.
+        try {
+          if (result.dev_otp) sessionStorage.setItem("ip-sakti-dev-otp", result.dev_otp);
+          else sessionStorage.removeItem("ip-sakti-dev-otp");
+          if (result.message) sessionStorage.setItem("ip-sakti-verify-msg", result.message);
+        } catch { /* sessionStorage may be unavailable; ignore */ }
+        router.push(`/auth/verify?mode=register&email=${encodeURIComponent(cleanEmail)}`);
       } else if (result.access_token) {
         setSession(result.access_token, result.user); router.push("/dashboard");
       } else {

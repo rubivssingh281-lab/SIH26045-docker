@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -12,45 +13,91 @@ from app.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/signup", response_model=UserResponse)
+
+def _normalize_email(email: str) -> str:
+    """Trim + lowercase so 'User@Gmail.com ' and 'user@gmail.com' are the same account."""
+    return (email or "").strip().lower()
+
+
+def _dispatch_otp(background_tasks: BackgroundTasks, email: str, otp: str) -> Optional[str]:
+    """Queue the OTP verification email.
+
+    Returns the raw OTP for on-screen display ONLY when email delivery is not
+    configured (demo / zero-setup mode). When MAIL_* is configured the code is
+    delivered by email and this returns None, so the OTP is never exposed over
+    the API in a real deployment.
+    """
+    background_tasks.add_task(send_otp_email, email=email, otp=otp)
+    return None if settings.mail_configured else otp
+
+
+def _issue_otp(db: Session, background_tasks: BackgroundTasks, email: str) -> Optional[str]:
+    """Generate + persist a fresh OTP for ``email`` and dispatch it. Returns the
+    demo-mode OTP (see :func:`_dispatch_otp`) or None."""
+    otp = generate_otp()
+    expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+    db.add(OTPRecord(email=email, otp_code=otp, expires_at=expires))
+    db.commit()
+    return _dispatch_otp(background_tasks, email, otp)
+
+
+@router.post("/signup")
 async def signup(
-    user_in: UserCreate, 
+    user_in: UserCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.email == user_in.email).first()
-    if user:
+    email = _normalize_email(user_in.email)
+    user = db.query(User).filter(User.email == email).first()
+
+    # A fully verified account already owns this email — block the duplicate.
+    if user and user.is_verified:
         raise HTTPException(status_code=400, detail="Email already registered")
-        
+
     hashed_pwd = get_password_hash(user_in.password)
-    new_user = User(
-        email=user_in.email, 
-        hashed_password=hashed_pwd,
-        first_name=user_in.first_name,
-        last_name=user_in.last_name,
-        role="Researcher",
-        default_jurisdiction="INDIA"
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    
-    otp = generate_otp()
-    expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+    if user:
+        # Unverified account re-signing up: refresh their details and send a
+        # fresh code instead of rejecting them with "already registered".
+        user.hashed_password = hashed_pwd
+        if user_in.first_name:
+            user.first_name = user_in.first_name
+        if user_in.last_name:
+            user.last_name = user_in.last_name
+        db.commit()
+        db.refresh(user)
+        new_user = user
+    else:
+        new_user = User(
+            email=email,
+            hashed_password=hashed_pwd,
+            first_name=user_in.first_name,
+            last_name=user_in.last_name,
+            role="Researcher",
+            default_jurisdiction="INDIA"
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    # Store OTP
-    otp_record = OTPRecord(email=new_user.email, otp_code=otp, expires_at=expires)
-    db.add(otp_record)
-    db.commit()
+    dev_otp = _issue_otp(db, background_tasks, new_user.email)
 
-    # Send the verification code by email.
-    background_tasks.add_task(send_otp_email, email=new_user.email, otp=otp)
-    return new_user
+    return {
+        "user": UserResponse.model_validate(new_user, from_attributes=True).model_dump(),
+        "requires_otp": True,
+        "message": (
+            "Verification code sent to your email."
+            if settings.mail_configured
+            else "Email delivery is not configured — use the code shown below "
+                 "(it is also printed in the backend logs)."
+        ),
+        "dev_otp": dev_otp,
+    }
 
 
 @router.post("/login", response_model=AuthResponse)
 def login(user_in: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_in.email).first()
+    email = _normalize_email(user_in.email)
+    user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
 
@@ -69,40 +116,35 @@ async def request_otp(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.email == otp_in.email).first()
+    email = _normalize_email(otp_in.email)
+    user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="No account associated with this email")
-        
-    otp = generate_otp()
-    expires = datetime.now(timezone.utc) + timedelta(minutes=10)
 
-    # Store OTP
-    otp_record = OTPRecord(email=user.email, otp_code=otp, expires_at=expires)
-    db.add(otp_record)
-    db.commit()
-
-    # Send the verification code by email.
-    background_tasks.add_task(send_otp_email, email=user.email, otp=otp)
-    return {"message": "OTP sent successfully"}
+    dev_otp = _issue_otp(db, background_tasks, user.email)
+    return {"message": "OTP sent successfully", "dev_otp": dev_otp}
 
 @router.post("/verify-otp", response_model=AuthResponse)
 def verify_otp(otp_in: OTPVerify, db: Session = Depends(get_db)):
+    email = _normalize_email(otp_in.email)
+    code = (otp_in.otp_code or "").strip()
+    # Newest matching code first, so a re-issued OTP supersedes older ones.
     otp_record = db.query(OTPRecord).filter(
-        OTPRecord.email == otp_in.email,
-        OTPRecord.otp_code == otp_in.otp_code
-    ).first()
-    
+        OTPRecord.email == email,
+        OTPRecord.otp_code == code
+    ).order_by(OTPRecord.id.desc()).first()
+
     if not otp_record:
         raise HTTPException(status_code=400, detail="Invalid OTP")
-        
+
     now = datetime.now(timezone.utc)
     if otp_record.expires_at.tzinfo is None:
         now = now.replace(tzinfo=None)
-        
+
     if now > otp_record.expires_at:
         raise HTTPException(status_code=400, detail="OTP expired")
-        
-    user = db.query(User).filter(User.email == otp_in.email).first()
+
+    user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         

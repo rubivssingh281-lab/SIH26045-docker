@@ -123,6 +123,5 @@ async def send_otp_email(email: EmailStr, otp: str):
     except Exception as e:
         logger.error(f"Failed to send email to {email}: {e}")
         # Dev fallback: surface the OTP in the backend log so sign-in still works
-        # when email delivery fails (e.g. rejected Gmail app password). Replace the
-        # MAIL_PASSWORD in backend/.env with a fresh Gmail App Password to restore email.
+        # if email delivery ever fails (e.g. a rejected Gmail app password).
         logger.warning(f"[OTP FALLBACK] Email delivery failed — verification code for {email} is: {otp}")

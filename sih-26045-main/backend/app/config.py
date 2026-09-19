@@ -19,7 +19,9 @@ class Settings(BaseSettings):
 
     secret_key: str = os.getenv("SECRET_KEY", "development-only-change-before-deployment")
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    # 8 hours — matches the frontend session cookie so a normal work session
+    # doesn't silently expire and log the user out. Override via env if needed.
+    access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
     mail_username: str = os.getenv("MAIL_USERNAME", "")
     mail_password: str = os.getenv("MAIL_PASSWORD", "")

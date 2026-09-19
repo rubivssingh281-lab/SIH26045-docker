@@ -48,7 +48,9 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env
+      # Optional: the stack still boots (in demo/OTP-in-logs mode) if it's absent.
+      - path: ./backend/.env
+        required: false
     environment:
       # Reach the Ollama container by service name, and pick the model.
       OLLAMA_BASE_URL: "http://ollama:11434"

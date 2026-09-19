@@ -59,12 +59,16 @@ export const authApi = {
       mockUsers = [user, ...mockUsers.filter(item => item.email !== payload.email)];
       return mockDelay({ access_token: makeMockToken(user.email), token_type: "bearer", user, requires_otp: false, message: "Account created" });
     }
-    const { data } = await api.post<AuthUser>("/auth/signup", payload);
+    const { data } = await api.post<{ user: AuthUser; requires_otp: boolean; message?: string; dev_otp?: string | null }>(
+      "/auth/signup",
+      { ...payload, email: payload.email.trim().toLowerCase() }
+    );
     return {
-      requires_otp: true,
-      user: data,
+      requires_otp: data.requires_otp ?? true,
+      user: data.user,
       access_token: "",
-      message: "OTP sent to your email"
+      message: data.message || "OTP sent to your email",
+      dev_otp: data.dev_otp ?? null
     } as AuthResponse;
   },
   async login(email: string, password: string): Promise<AuthResponse> {
@@ -73,10 +77,10 @@ export const authApi = {
       const user = mockUsers.find(item => item.email === email) ?? { email, role: "Researcher", default_jurisdiction: "INDIA" as const };
       return mockDelay({ access_token: makeMockToken(email), token_type: "bearer", user, message: "Signed in" });
     }
-    const { data } = await api.post<AuthResponse>("/auth/login", { email, password });
+    const { data } = await api.post<AuthResponse>("/auth/login", { email: email.trim().toLowerCase(), password });
     return data;
   },
-  async requestOtp(email: string): Promise<{ message: string }> {
+  async requestOtp(email: string): Promise<{ message: string; dev_otp?: string | null }> {
     if (useMock) {
       const values = new Uint32Array(1);
       if (typeof crypto !== "undefined" && crypto.getRandomValues) {
@@ -88,7 +92,7 @@ export const authApi = {
       console.info(`[IP-SAKTI mock] OTP generated for ${email}: ${mockOtp}`);
       return mockDelay({ message: "OTP requested" });
     }
-    const { data } = await api.post<{ message: string }>("/auth/request-otp", { email });
+    const { data } = await api.post<{ message: string; dev_otp?: string | null }>("/auth/request-otp", { email: email.trim().toLowerCase() });
     return data;
   },
   async verifyOtp(email: string, otp: string): Promise<AuthResponse> {
@@ -97,7 +101,7 @@ export const authApi = {
       const user = mockUsers.find(item => item.email === email) ?? { email, role: "Researcher", default_jurisdiction: "INDIA" as const };
       return mockDelay({ access_token: makeMockToken(email), token_type: "bearer", user, message: "OTP verified" });
     }
-    const { data } = await api.post<AuthResponse>("/auth/verify-otp", { email, otp_code: otp });
+    const { data } = await api.post<AuthResponse>("/auth/verify-otp", { email: email.trim().toLowerCase(), otp_code: otp.trim() });
     return data;
   },
   async me(): Promise<AuthUser> {

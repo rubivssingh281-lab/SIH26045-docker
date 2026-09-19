@@ -78,7 +78,10 @@ export default function LoginPage() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Enter a valid email address to receive your OTP.");
     setLoading(true);
     try {
-      await authApi.requestOtp(email); setOtp(""); setSecondsLeft(OTP_TTL); setOtpStage("verify"); setInfo(`Verification code sent to ${maskEmail(email)}.`);
+      const result = await authApi.requestOtp(email);
+      setSecondsLeft(OTP_TTL); setOtpStage("verify");
+      if (result.dev_otp) { setOtp(result.dev_otp); setInfo(`Demo mode — email delivery is off. Your code is ${result.dev_otp} (pre-filled).`); }
+      else { setOtp(""); setInfo(`Verification code sent to ${maskEmail(email)}.`); }
     } catch (err) { setError(getApiErrorMessage(err, "We couldn't send the verification code right now.")); }
     finally { setLoading(false); }
   }
