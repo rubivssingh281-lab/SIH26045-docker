@@ -22,17 +22,26 @@ class Settings(BaseSettings):
 
     # Bhashini translation service. Discovery is used unless a direct inference
     # endpoint and service IDs are supplied.
-    bhashini_api_key: str = os.getenv("BHASHINI_API_KEY", "")
+    bhashini_api_key: str = os.getenv("BHASHINI_API_KEY", "3985624c5b-54cc-4be9-8a4b-5aca27108494")
     bhashini_user_id: str = os.getenv("BHASHINI_USER_ID", "")
     bhashini_pipeline_id: str = os.getenv("BHASHINI_PIPELINE_ID", "")
     bhashini_pipeline_url: str = os.getenv(
         "BHASHINI_PIPELINE_URL",
         "https://meity-auth.ulcacontrib.org/ulca/apis/v0/model/getModelsPipeline",
     )
-    bhashini_inference_url: str = os.getenv("BHASHINI_INFERENCE_URL", "")
-    bhashini_inference_auth_token: str = os.getenv("BHASHINI_INFERENCE_AUTH_TOKEN", "")
+    bhashini_inference_url: str = os.getenv(
+        "BHASHINI_INFERENCE_URL",
+        "https://dhruva-api.bhashini.gov.in/services/inference/pipeline",
+    )
+    bhashini_inference_auth_token: str = os.getenv(
+        "BHASHINI_INFERENCE_AUTH_TOKEN",
+        "vua9Gy0ihRM1sUqo5Si0sju2Viwl1He8rj026CbYl3r1rlyGRs4ZJPjTEW8nFIdH",
+    )
     bhashini_inference_auth_header: str = os.getenv("BHASHINI_INFERENCE_AUTH_HEADER", "Authorization")
-    bhashini_translation_service_id: str = os.getenv("BHASHINI_TRANSLATION_SERVICE_ID", "")
+    bhashini_translation_service_id: str = os.getenv(
+        "BHASHINI_TRANSLATION_SERVICE_ID",
+        "ai4bharat/indictrans-v2-all-gpu--t4",
+    )
     bhashini_asr_service_id: str = os.getenv("BHASHINI_ASR_SERVICE_ID", "")
     bhashini_source_language: str = os.getenv("BHASHINI_SOURCE_LANGUAGE", "en")
     bhashini_timeout: float = float(os.getenv("BHASHINI_TIMEOUT", "60"))
