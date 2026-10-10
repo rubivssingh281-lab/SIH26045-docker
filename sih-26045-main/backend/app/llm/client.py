@@ -166,11 +166,13 @@ class LLMClient:
             else:
                 raise
 
+        msg = response.choices[0].message
+        content = msg.content or getattr(msg, "reasoning", "") or ""
         return {
             "model": self.model,
             "provider": "openai",
             "prompt": prompt,
-            "content": response.choices[0].message.content,
+            "content": content,
             "metadata": kwargs,
         }
 

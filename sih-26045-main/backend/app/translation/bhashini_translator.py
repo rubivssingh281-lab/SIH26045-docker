@@ -24,6 +24,7 @@ SUPPORTED_AUDIO_TYPES = {
 }
 
 LANGUAGE_CODES = {
+    # 22 Scheduled Languages of India
     "english": "en", "en": "en", "hindi": "hi", "hi": "hi",
     "bengali": "bn", "bangla": "bn", "bn": "bn", "telugu": "te", "te": "te",
     "tamil": "ta", "ta": "ta", "marathi": "mr", "mr": "mr", "gujarati": "gu", "gu": "gu",
@@ -33,6 +34,23 @@ LANGUAGE_CODES = {
     "sindhi": "sd", "sd": "sd", "dogri": "doi", "doi": "doi", "maithili": "mai", "mai": "mai",
     "santali": "sat", "sat": "sat", "kashmiri": "ks", "ks": "ks", "manipuri": "mni", "mni": "mni",
     "bodo": "brx", "brx": "brx",
+    # Additional Indian Languages
+    "awadhi": "awa", "awa": "awa",
+    "bhojpuri": "bho", "bho": "bho",
+    "braj": "bra", "bra": "bra",
+    "chhattisgarhi": "hne", "hne": "hne",
+    "gondi": "gon", "gon": "gon",
+    "ho": "hoc", "hoc": "hoc",
+    "kangri": "xnr", "xnr": "xnr",
+    "magahi": "mag", "mag": "mag",
+    "mizo": "lus", "lus": "lus",
+    "sinhala": "si", "si": "si",
+    "tulu": "tcy", "tcy": "tcy",
+    "bhili": "bhb", "bhb": "bhb",
+    "haryanvi": "bgc", "bgc": "bgc",
+    "rajasthani": "raj", "raj": "raj",
+    "khasi": "kha", "kha": "kha",
+    "hinglish": "hinglish",
 }
 
 

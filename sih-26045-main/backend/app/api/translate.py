@@ -26,13 +26,22 @@ class TranslateResponse(BaseModel):
 
 def _translate_with_llm(text: str, target_language: str, source_language: str | None = None) -> str:
     from app.llm.client import call_llm
+    is_hinglish = target_language.strip().lower() == "hinglish"
+    if is_hinglish:
+        system_prompt = (
+            "You are a translator for an Indian Intellectual Property and Ayurvedic research application. "
+            "Translate accurately into natural Hinglish (conversational Hindi written in English/Latin script). "
+            "Return ONLY the direct translation."
+        )
+    else:
+        system_prompt = (
+            f"You are a professional translator for an Indian Intellectual Property and Ayurvedic research application. "
+            f"Translate accurately to {target_language} using its standard script and grammar. "
+            "Return ONLY the direct translation."
+        )
     prompt = (
         f"Translate the following text from {source_language or 'English'} to {target_language}.\n"
-        f"Return ONLY the direct translation without explanation or quotes:\n\n{text}"
-    )
-    system_prompt = (
-        f"You are a professional translator for an Indian Intellectual Property and Ayurvedic research application. "
-        f"Translate accurately to {target_language}."
+        f"Return ONLY the direct translation without explanation, preamble, or quotes:\n\n{text}"
     )
     res = call_llm(prompt=prompt, system_prompt=system_prompt, temperature=0.1, max_tokens=1000)
     out = (res.get("content") or "").strip()
@@ -43,16 +52,26 @@ def _translate_batch_with_llm(texts: list[str], target_language: str, source_lan
     from app.llm.client import call_llm
     results: list[str] = []
     BATCH_SIZE = 25
+    is_hinglish = target_language.strip().lower() == "hinglish"
+
     for i in range(0, len(texts), BATCH_SIZE):
         chunk = texts[i:i + BATCH_SIZE]
+        if is_hinglish:
+            system_prompt = (
+                "You are a professional translator for an Indian Ayurvedic IP system. "
+                "Translate into conversational Hinglish (Hindi written in the English/Latin alphabet). "
+                f"Output exactly {len(chunk)} lines with no extra text, notes, or numbering."
+            )
+        else:
+            system_prompt = (
+                f"You are a professional translator for an Indian Ayurvedic IP system. "
+                f"Translate accurately to {target_language}. "
+                f"Output exactly {len(chunk)} lines with no extra text, notes, or numbering."
+            )
         prompt = (
             f"Translate each of the following UI strings from {source_language or 'English'} to {target_language}.\n"
             f"Preserve the exact line count ({len(chunk)} lines). Output ONLY the translated strings, one per line, nothing else:\n\n"
             + "\n".join(chunk)
-        )
-        system_prompt = (
-            f"You are a professional translator for an Indian Ayurvedic IP system. "
-            f"Translate to {target_language}. Output exactly {len(chunk)} lines with no extra text, notes, or numbering."
         )
         try:
             res = call_llm(prompt=prompt, system_prompt=system_prompt, temperature=0.1, max_tokens=1500)

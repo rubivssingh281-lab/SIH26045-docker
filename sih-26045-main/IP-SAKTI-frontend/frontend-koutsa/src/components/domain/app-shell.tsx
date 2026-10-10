@@ -58,6 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [jurisdiction, setJurisdiction] = useState<Jurisdiction>("INDIA");
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [langQuery, setLangQuery] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const { language, setLanguage, t, isTranslating } = useLanguage();
   const { user, clearSession } = useAuth();
@@ -213,22 +214,56 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
 
               {languageOpen && (
-                <div className="absolute right-0 top-full mt-1 max-h-[70vh] w-56 overflow-y-auto rounded-lg border border-line bg-white py-1 shadow-lg">
-                  {(["India", "International"] as const).map(region => (
-                    <div key={region}>
-                      <p className="px-4 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-ink/40">{region}</p>
-                      {LANGUAGES.filter(l => l.region === region).map(opt => (
-                        <button
-                          key={opt.name}
-                          onClick={() => { setLanguage(opt.name as Language); setLanguageOpen(false); }}
-                          className={cn("flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm transition-colors", language === opt.name ? "bg-forest/10 font-bold text-forest" : "text-ink hover:bg-[#EAF1F8]")}
-                        >
-                          <span>{opt.native}</span>
-                          <span className="text-xs text-ink/40">{opt.name}</span>
-                        </button>
-                      ))}
+                <div className="absolute right-0 top-full mt-1 max-h-[75vh] w-64 overflow-y-auto rounded-xl border border-line bg-white shadow-xl z-50">
+                  <div className="sticky top-0 bg-white p-2 border-b border-line/60 z-10 backdrop-blur-sm">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#F4F6F4] text-xs">
+                      <Search size={13} className="text-ink/40 shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Search 39 languages..."
+                        value={langQuery}
+                        onChange={e => setLangQuery(e.target.value)}
+                        className="w-full bg-transparent border-0 outline-none text-xs text-ink placeholder:text-ink/40"
+                        autoFocus
+                      />
                     </div>
-                  ))}
+                  </div>
+
+                  {(() => {
+                    const q = langQuery.trim().toLowerCase();
+                    const filtered = LANGUAGES.filter(l =>
+                      !q || l.name.toLowerCase().includes(q) || l.native.toLowerCase().includes(q)
+                    );
+
+                    if (filtered.length === 0) {
+                      return <div className="p-4 text-center text-xs text-ink/45">No languages match &ldquo;{langQuery}&rdquo;</div>;
+                    }
+
+                    return (["Scheduled Languages", "Additional Indian Languages", "International"] as const).map(region => {
+                      const list = filtered.filter(l => l.region === region);
+                      if (list.length === 0) return null;
+                      return (
+                        <div key={region} className="py-1">
+                          <p className="px-3.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-ink/40">
+                            {region} ({list.length})
+                          </p>
+                          {list.map(opt => (
+                            <button
+                              key={opt.name}
+                              onClick={() => { setLanguage(opt.name as Language); setLanguageOpen(false); setLangQuery(""); }}
+                              className={cn(
+                                "flex w-full items-center justify-between gap-2 px-3.5 py-1.5 text-left text-sm transition-colors",
+                                language === opt.name ? "bg-forest/10 font-bold text-forest" : "text-ink hover:bg-[#EAF1F8]"
+                              )}
+                            >
+                              <span className="truncate">{opt.native}</span>
+                              <span className="text-xs text-ink/45 shrink-0">{opt.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               )}
             </div>
