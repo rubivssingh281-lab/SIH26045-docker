@@ -64,6 +64,27 @@ def create_app() -> FastAPI:
     app.include_router(agent_router)
     app.include_router(connectors_router)
 
+    from fastapi.responses import JSONResponse
+    from fastapi import Request
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        logger.error(f"Global unhandled error on {request.url.path}: {exc}", exc_info=True)
+        origin = request.headers.get("origin") or "*"
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(exc), "error": "InternalServerError"},
+            headers={
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Methods": "*",
+                "Access-Control-Allow-Headers": "*",
+            }
+        )
+
     @app.get("/")
     def root():
         return {"message": "SIH 2026 Patent Formulation API is running"}

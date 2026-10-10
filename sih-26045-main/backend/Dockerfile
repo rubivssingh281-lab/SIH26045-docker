@@ -25,5 +25,5 @@ COPY . .
 
 EXPOSE 8000
 
-# The SQLite dev DB is created on first start; app.db is git/docker-ignored.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Listen on dynamic PORT passed by Render/Cloud Run, or default to 8000 locally
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

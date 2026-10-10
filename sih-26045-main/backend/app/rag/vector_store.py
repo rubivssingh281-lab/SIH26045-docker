@@ -18,34 +18,37 @@ class VectorStore:
         )
 
     def query(self, text: str, limit: int = 5, jurisdiction: str = None) -> Dict[str, Any]:
-        query_emb = embed_text(text)["embedding"]
-        
-        kwargs = {
-            "query_embeddings": [query_emb],
-            "n_results": limit
-        }
-        if jurisdiction:
-            kwargs["where"] = {"jurisdiction": jurisdiction}
+        try:
+            query_emb = embed_text(text)["embedding"]
             
-        results = self.collection.query(**kwargs)
-        
-        formatted_results = []
-        if results and results['documents'] and results['documents'][0]:
-            docs = results['documents'][0]
-            metadatas = results['metadatas'][0] if results['metadatas'] else []
-            distances = results['distances'][0] if results['distances'] else []
-            
-            for i in range(len(docs)):
-                # Chroma returns distances. Cosine distance = 1 - Cosine similarity
-                distance = distances[i] if i < len(distances) else 0.0
-                score = 1.0 - distance
-                formatted_results.append({
-                    "score": score,
-                    "text": docs[i],
-                    "metadata": metadatas[i] if i < len(metadatas) else {}
-                })
+            kwargs = {
+                "query_embeddings": [query_emb],
+                "n_results": limit
+            }
+            if jurisdiction:
+                kwargs["where"] = {"jurisdiction": jurisdiction}
                 
-        return {"query": text, "limit": limit, "documents": formatted_results}
+            results = self.collection.query(**kwargs)
+            
+            formatted_results = []
+            if results and results.get('documents') and results['documents'][0]:
+                docs = results['documents'][0]
+                metadatas = results['metadatas'][0] if results.get('metadatas') else []
+                distances = results['distances'][0] if results.get('distances') else []
+                
+                for i in range(len(docs)):
+                    # Chroma returns distances. Cosine distance = 1 - Cosine similarity
+                    distance = distances[i] if i < len(distances) else 0.0
+                    score = 1.0 - distance
+                    formatted_results.append({
+                        "score": score,
+                        "text": docs[i],
+                        "metadata": metadatas[i] if i < len(metadatas) else {}
+                    })
+                    
+            return {"query": text, "limit": limit, "documents": formatted_results}
+        except Exception:
+            return {"query": text, "limit": limit, "documents": []}
 
     def count(self) -> int:
         """Number of documents currently in the collection."""

@@ -51,7 +51,7 @@ class LLMClient:
         selected_model = model or os.getenv("LLM_MODEL") or settings.llm_model
         if self.provider == "openai" and (not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama")):
             if "groq.com" in (base_url or "") or api_key.startswith("gsk_"):
-                selected_model = "llama-3.3-70b-versatile"
+                selected_model = "openai/gpt-oss-20b"
             elif "googleapis.com" in (base_url or "") or api_key.startswith("AIza"):
                 selected_model = "gemini-2.0-flash"
             else:

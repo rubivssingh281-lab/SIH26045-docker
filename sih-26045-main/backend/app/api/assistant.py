@@ -198,12 +198,19 @@ def assistant_chat(payload: ChatMessage):
         return ChatResponse(text=_GREETING_REPLY, citations=[], sources=[])
 
     # 1. Ayurveda gatekeeper (LLM classifier) -> redirect off-topic questions.
-    if not _is_ayurveda_question(message):
-        return ChatResponse(text=_OFFTOPIC_REPLY, citations=[], sources=[])
+    try:
+        if not _is_ayurveda_question(message):
+            return ChatResponse(text=_OFFTOPIC_REPLY, citations=[], sources=[])
+    except Exception as exc:
+        logger.warning(f"Gatekeeper error ({exc}); proceeding to retrieval.")
 
     # 2. Retrieve context
-    rag_response = find_prior_art(message, limit=3)
-    results = rag_response.get("results", [])
+    try:
+        rag_response = find_prior_art(message, limit=3)
+        results = rag_response.get("results", [])
+    except Exception as exc:
+        logger.warning(f"Retrieval error in assistant chat ({exc}); proceeding with empty results.")
+        results = []
 
     # 3. Format context and build citations/sources from retrieval (not the LLM).
     # TKDL documents are long and gemma4 runs with a capped context window, so

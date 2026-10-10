@@ -1,0 +1,23 @@
+{
+  "connectors": [],
+  "audit": [
+    {
+      "time": "2026-08-31T12:59:12.900122+00:00",
+      "action": "removed",
+      "connector": "Demo WIPO",
+      "detail": ""
+    },
+    {
+      "time": "2026-08-31T12:59:12.885013+00:00",
+      "action": "tested",
+      "connector": "Demo WIPO",
+      "detail": "HTTP 200"
+    },
+    {
+      "time": "2026-08-31T12:59:11.546477+00:00",
+      "action": "added",
+      "connector": "Demo WIPO",
+      "detail": "WIPO Patentscope · consent granted"
+    }
+  ]
+}
