@@ -112,10 +112,15 @@ class GeminiTranslator:
         max_retries: int = 3,
         temperature: float = 0.1,
     ):
-        key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        key = (
+            api_key
+            or os.getenv("GEMINI_API_KEY")
+            or os.getenv("GOOGLE_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+        )
         if not key:
             raise GeminiTranslationError(
-                "No API key found. Set the GEMINI_API_KEY environment variable "
+                "No API key found. Set the GEMINI_API_KEY or OPENAI_API_KEY environment variable "
                 "(or add it to backend/.env), or pass api_key=... explicitly."
             )
         genai.configure(api_key=key)

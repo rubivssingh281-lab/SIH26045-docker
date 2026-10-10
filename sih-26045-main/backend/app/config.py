@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./app.db"
     max_retrieval_results: int = 5
 
-    # LLM settings — local Ollama (gemma4:e4b) by default. Set llm_provider=openai to use OpenAI/Groq/Gemini.
+    # LLM settings — local Ollama (gemma4:e4b) by default. Set llm_provider=openai to use Google Gemini (gemini-3.5-flash).
     llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
     llm_model: str = os.getenv("LLM_MODEL", "gemma4:e4b")
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")

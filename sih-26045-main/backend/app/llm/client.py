@@ -17,51 +17,41 @@ logger = logging.getLogger(__name__)
 
 class LLMClient:
     """
-    Unified LLM wrapper. Defaults to the local Ollama runtime (gemma4) via its
-    native /api/chat endpoint, which — unlike Ollama's OpenAI-compatible /v1
-    shim — honors `options.num_ctx`. That matters because gemma4 defaults to a
-    128k context whose KV cache will not fit in modest RAM; we cap it via
-    settings.llm_num_ctx.
-
-    Set LLM_PROVIDER=openai (with OPENAI_API_KEY) to route through OpenAI instead.
+    Unified LLM wrapper:
+    - Local development: Ollama (gemma4:e4b) via /api/chat.
+    - Cloud deployment: Google Gemini (gemini-3.5-flash) via OpenAI-compatible endpoint
+      (1,000,000 TPM, 1,500 requests/day, 100% Free, sub-second responses).
     """
 
     def __init__(self, model: str | None = None, provider: str | None = None):
-        api_key = (os.getenv("OPENAI_API_KEY") or os.getenv("GROQ_API_KEY") or settings.openai_api_key or "").strip()
-        base_url = (os.getenv("OPENAI_BASE_URL") or os.getenv("GROQ_BASE_URL") or settings.openai_base_url or "").strip()
+        api_key = (
+            os.getenv("OPENAI_API_KEY")
+            or os.getenv("GEMINI_API_KEY")
+            or settings.openai_api_key
+            or ""
+        ).strip()
+        base_url = (os.getenv("OPENAI_BASE_URL") or settings.openai_base_url or "").strip()
         configured_provider = (provider or os.getenv("LLM_PROVIDER") or settings.llm_provider or "").lower()
 
-        # Auto-detect Groq keys (gsk_) or Gemini keys (AIza... / AQ....)
+        # Google Gemini is our primary cloud provider (Free, 1M TPM, 1500 RPD)
         is_gemini = api_key.startswith("AIza") or api_key.startswith("AQ.") or "googleapis.com" in (base_url or "")
         self.is_gemini = is_gemini
 
-        if api_key.startswith("gsk_"):
-            if not base_url:
-                base_url = "https://api.groq.com/openai/v1"
-            if not configured_provider or configured_provider == "ollama":
-                configured_provider = "openai"
-        elif is_gemini:
-            if not base_url:
+        if is_gemini or api_key:
+            if not base_url or is_gemini:
                 base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
             if not configured_provider or configured_provider == "ollama":
                 configured_provider = "openai"
-        elif api_key and (not configured_provider or configured_provider == "ollama"):
-            configured_provider = "openai"
 
         self.provider = configured_provider or "ollama"
 
-        # Model selection: ensure a valid cloud model is used if in openai mode
+        # Model selection: Google Gemini gemini-3.5-flash is our default high-speed cloud model
         selected_model = model or os.getenv("LLM_MODEL") or settings.llm_model
-
-        # If a Gemini key is provided, automatically route to gemini-3.5-flash
-        if is_gemini:
-            if not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "gemini-2.0-flash", "gemini-2.5-flash"):
+        if self.provider == "openai":
+            if not selected_model or selected_model in (
+                "gemma4", "gemma4:e4b", "ollama", "gemini-2.0-flash", "gemini-2.5-flash"
+            ):
                 selected_model = "gemini-3.5-flash"
-        elif self.provider == "openai" and (not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama")):
-            if "groq.com" in (base_url or "") or api_key.startswith("gsk_"):
-                selected_model = "openai/gpt-oss-20b"
-            else:
-                selected_model = "gpt-4o-mini"
 
         # Legacy callers passing model="gemma4" when no cloud API key is present
         if model == "gemma4" and not api_key:
@@ -78,7 +68,7 @@ class LLMClient:
             if OpenAI and api_key:
                 self._openai = OpenAI(api_key=api_key, base_url=base_url or None)
             else:
-                logger.warning("OpenAI provider selected but package or API key is missing; LLM calls will fail.")
+                logger.warning("Cloud LLM provider selected but API key is missing; LLM calls will fail.")
 
     def _generate_ollama(self, prompt: str, system_prompt: str | None, **kwargs: Any) -> Dict[str, Any]:
         messages = []
@@ -90,10 +80,6 @@ class LLMClient:
             "model": self.model,
             "messages": messages,
             "stream": False,
-            # Disable "thinking" output. Reasoning-capable models (e.g. gemma4:e4b)
-            # otherwise emit every token to a hidden reasoning channel and return an
-            # EMPTY `content`; we want the final answer directly. Non-thinking models
-            # ignore the flag, and if a model/Ollama build rejects it we retry without.
             "think": False,
             "options": {
                 "num_ctx": settings.llm_num_ctx,
@@ -101,8 +87,6 @@ class LLMClient:
                 "num_predict": kwargs.get("max_tokens", 1000),
             },
         }
-        # Force valid JSON output when requested (Ollama constrained decoding).
-        # Small models are otherwise unreliable at raw JSON.
         if kwargs.get("format"):
             payload["format"] = kwargs["format"]
 
@@ -115,7 +99,6 @@ class LLMClient:
             try:
                 response = _post(payload)
             except httpx.HTTPStatusError as exc:
-                # Some models / older Ollama builds reject the `think` field — retry without it.
                 body_text = (exc.response.text or "").lower() if exc.response is not None else ""
                 if exc.response is not None and exc.response.status_code == 400 and "think" in body_text:
                     payload.pop("think", None)
@@ -140,7 +123,7 @@ class LLMClient:
 
     def _generate_openai(self, prompt: str, system_prompt: str | None, **kwargs: Any) -> Dict[str, Any]:
         if not self._openai:
-            raise RuntimeError("OpenAI client not initialized. Check API key and dependencies.")
+            raise RuntimeError("Cloud LLM client not initialized. Check OPENAI_API_KEY setting.")
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -159,7 +142,7 @@ class LLMClient:
         except Exception as exc:
             err_str = str(exc).lower()
             if "model" in err_str and ("not found" in err_str or "does not exist" in err_str or "404" in err_str or "no longer available" in err_str):
-                fallback_model = "gemini-3.5-flash" if getattr(self, "is_gemini", False) else "openai/gpt-oss-20b"
+                fallback_model = "gemini-3.5-flash"
                 logger.warning(f"Model '{self.model}' not found on provider. Retrying with fallback model '{fallback_model}'...")
                 response = self._openai.chat.completions.create(
                     model=fallback_model,

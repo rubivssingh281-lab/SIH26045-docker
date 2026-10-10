@@ -6,7 +6,8 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
-backend/app.db          # SQLite dev DB — auto-created on first backend startup
+backend/app.db
+*.db
 
 # ---- Node / frontend ----
 node_modules/

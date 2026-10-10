@@ -10,18 +10,18 @@ This guide walks you through deploying the complete **IP-SAKTI Sahayak** applica
 | :--- | :--- | :--- | :--- |
 | **Frontend** | Next.js 15 App Router | **Vercel** (100% Free) | Provides the single public URL (e.g. `https://ip-sakti.vercel.app`). |
 | **Backend & RAG** | FastAPI + ChromaDB + SentenceTransformers | **Render** or **Railway** (100% Free) | `all-MiniLM-L6-v2` and `ChromaDB` (~30MB) run directly on CPU within the backend container. No paid vector DB needed. |
-| **LLM Inference** | High-speed LLM | **Groq Cloud** or **Google Gemini** (100% Free) | Cloud hosts cannot run 9GB local Ollama on free 512MB RAM tiers. Using Groq or Gemini's free API provides sub-second responses (~0.5s vs 30s) at **$0.00 cost** with no credit card required. |
+| **LLM Inference** | High-speed LLM | **Google Gemini 3.5 Flash** (100% Free) | Cloud hosts cannot run 9GB local Ollama on free 512MB RAM tiers. Google Gemini provides 1,000,000 tokens/minute and 1,500 free requests/day with sub-second responses (~0.5s) at **$0.00 cost** with no credit card required. |
 
 ---
 
 ## 🚀 Method 1: The Modern Free Cloud Stack (Recommended)
 This gives you a permanent, fast, 24/7 web link to share with anyone.
 
-### Step 1: Get a Free High-Speed LLM API Key (2 Minutes)
-1. Go to [Groq Console](https://console.groq.com/) (100% Free, no credit card required).
-2. Sign in with Google / GitHub and click **API Keys** -> **Create API Key**.
-3. Copy the key (starts with `gsk_...`).
-> *Alternative*: You can also use [Google AI Studio](https://aistudio.google.com/) (`AIza...`) with `LLM_MODEL=gemini-2.0-flash`.
+### Step 1: Get a Free Google AI Studio API Key (1 Minute)
+1. Go to [Google AI Studio](https://aistudio.google.com/apikey) (100% Free, no credit card required).
+2. Sign in with your Google account and click **Create API Key**.
+3. Copy the key (starts with `AQ.` or `AIza...`).
+> *Note*: Google Gemini provides **1,000,000 tokens/min** and **1,500 requests/day** for free with zero credit card requirements, eliminating rate limits on RAG queries.
 
 ---
 
@@ -37,9 +37,9 @@ This gives you a permanent, fast, 24/7 web link to share with anyone.
    - **Instance Type:** `Free`
 6. Add the following **Environment Variables** in Render's dashboard:
    - `LLM_PROVIDER`: `openai`
-   - `OPENAI_BASE_URL`: `https://api.groq.com/openai/v1`
-   - `OPENAI_API_KEY`: `gsk_your_groq_key_here`
-   - `LLM_MODEL`: `llama-3.3-70b-versatile` *(or `gemma2-9b-it`)*
+   - `OPENAI_BASE_URL`: `https://generativelanguage.googleapis.com/v1beta/openai/`
+   - `OPENAI_API_KEY`: `your_gemini_api_key_here` *(starts with `AQ.` or `AIza`)*
+   - `LLM_MODEL`: `gemini-3.5-flash`
    - `CORS_ORIGINS`: `*`
    - `SECRET_KEY`: *Any random string (e.g. `sakti-secret-key-12345`)*
 7. Click **Create Web Service**.
@@ -107,9 +107,9 @@ Hugging Face Spaces provides **2 vCPU, 16 GB RAM, 50 GB Disk for FREE**.
 3. Push your repository to the Space Git remote.
 4. Set Space Secrets:
    - `LLM_PROVIDER`: `openai`
-   - `OPENAI_BASE_URL`: `https://api.groq.com/openai/v1`
-   - `OPENAI_API_KEY`: `gsk_...`
-   - `LLM_MODEL`: `llama-3.3-70b-versatile`
+   - `OPENAI_BASE_URL`: `https://generativelanguage.googleapis.com/v1beta/openai/`
+   - `OPENAI_API_KEY`: `your_gemini_api_key_here`
+   - `LLM_MODEL`: `gemini-3.5-flash`
 5. Hugging Face gives you a single clean link:
    `https://username-space-name.hf.space`
 
