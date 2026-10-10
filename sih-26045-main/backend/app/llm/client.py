@@ -49,11 +49,14 @@ class LLMClient:
 
         # Model selection: ensure a valid cloud model is used if in openai mode
         selected_model = model or os.getenv("LLM_MODEL") or settings.llm_model
-        if self.provider == "openai" and (not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama")):
+
+        # If a Gemini key is provided, automatically route to gemini-2.0-flash
+        if api_key.startswith("AIza") or "googleapis.com" in (base_url or ""):
+            if not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"):
+                selected_model = "gemini-2.0-flash"
+        elif self.provider == "openai" and (not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama")):
             if "groq.com" in (base_url or "") or api_key.startswith("gsk_"):
                 selected_model = "openai/gpt-oss-20b"
-            elif "googleapis.com" in (base_url or "") or api_key.startswith("AIza"):
-                selected_model = "gemini-2.0-flash"
             else:
                 selected_model = "gpt-4o-mini"
 
