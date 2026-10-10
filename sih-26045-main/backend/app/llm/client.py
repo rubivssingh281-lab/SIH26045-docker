@@ -142,13 +142,30 @@ class LLMClient:
         extra = {}
         if kwargs.get("format") == "json":
             extra["response_format"] = {"type": "json_object"}
-        response = self._openai.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=kwargs.get("temperature", 0.3),
-            max_tokens=kwargs.get("max_tokens", 1000),
-            **extra,
-        )
+        try:
+            response = self._openai.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=kwargs.get("temperature", 0.3),
+                max_tokens=kwargs.get("max_tokens", 1000),
+                **extra,
+            )
+        except Exception as exc:
+            err_str = str(exc).lower()
+            if "model" in err_str and ("not found" in err_str or "does not exist" in err_str or "404" in err_str):
+                fallback_model = "openai/gpt-oss-20b"
+                logger.warning(f"Model '{self.model}' not found on provider. Retrying with fallback model '{fallback_model}'...")
+                response = self._openai.chat.completions.create(
+                    model=fallback_model,
+                    messages=messages,
+                    temperature=kwargs.get("temperature", 0.3),
+                    max_tokens=kwargs.get("max_tokens", 1000),
+                    **extra,
+                )
+                self.model = fallback_model
+            else:
+                raise
+
         return {
             "model": self.model,
             "provider": "openai",
