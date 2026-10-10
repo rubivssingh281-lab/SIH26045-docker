@@ -31,13 +31,16 @@ class LLMClient:
         base_url = (os.getenv("OPENAI_BASE_URL") or os.getenv("GROQ_BASE_URL") or settings.openai_base_url or "").strip()
         configured_provider = (provider or os.getenv("LLM_PROVIDER") or settings.llm_provider or "").lower()
 
-        # Auto-detect Groq keys (starts with gsk_) or Gemini keys (starts with AIza)
+        # Auto-detect Groq keys (gsk_) or Gemini keys (AIza... / AQ....)
+        is_gemini = api_key.startswith("AIza") or api_key.startswith("AQ.") or "googleapis.com" in (base_url or "")
+        self.is_gemini = is_gemini
+
         if api_key.startswith("gsk_"):
             if not base_url:
                 base_url = "https://api.groq.com/openai/v1"
             if not configured_provider or configured_provider == "ollama":
                 configured_provider = "openai"
-        elif api_key.startswith("AIza"):
+        elif is_gemini:
             if not base_url:
                 base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
             if not configured_provider or configured_provider == "ollama":
@@ -50,10 +53,10 @@ class LLMClient:
         # Model selection: ensure a valid cloud model is used if in openai mode
         selected_model = model or os.getenv("LLM_MODEL") or settings.llm_model
 
-        # If a Gemini key is provided, automatically route to gemini-2.0-flash
-        if api_key.startswith("AIza") or "googleapis.com" in (base_url or ""):
-            if not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"):
-                selected_model = "gemini-2.0-flash"
+        # If a Gemini key is provided, automatically route to gemini-3.5-flash
+        if is_gemini:
+            if not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "gemini-2.0-flash", "gemini-2.5-flash"):
+                selected_model = "gemini-3.5-flash"
         elif self.provider == "openai" and (not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama")):
             if "groq.com" in (base_url or "") or api_key.startswith("gsk_"):
                 selected_model = "openai/gpt-oss-20b"
@@ -155,8 +158,8 @@ class LLMClient:
             )
         except Exception as exc:
             err_str = str(exc).lower()
-            if "model" in err_str and ("not found" in err_str or "does not exist" in err_str or "404" in err_str):
-                fallback_model = "openai/gpt-oss-20b"
+            if "model" in err_str and ("not found" in err_str or "does not exist" in err_str or "404" in err_str or "no longer available" in err_str):
+                fallback_model = "gemini-3.5-flash" if getattr(self, "is_gemini", False) else "openai/gpt-oss-20b"
                 logger.warning(f"Model '{self.model}' not found on provider. Retrying with fallback model '{fallback_model}'...")
                 response = self._openai.chat.completions.create(
                     model=fallback_model,
