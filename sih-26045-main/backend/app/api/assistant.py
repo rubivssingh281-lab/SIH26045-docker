@@ -274,7 +274,7 @@ def assistant_chat(payload: ChatMessage):
             err_msg = ("Sahayak AI could not reach the language model right now. "
                        "For online cloud deployment, please set LLM_PROVIDER=openai, "
                        "OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/, OPENAI_API_KEY, "
-                       f"and LLM_MODEL=gemini-3.5-flash in Render's Environment tab. (Local error: {e})")
+                       f"and LLM_MODEL=gemini-flash-lite-latest in Render's Environment tab. (Local error: {e})")
         return ChatResponse(
             text=err_msg,
             citations=citations,

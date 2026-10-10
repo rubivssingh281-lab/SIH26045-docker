@@ -45,13 +45,13 @@ class LLMClient:
 
         self.provider = configured_provider or "ollama"
 
-        # Model selection: Google Gemini gemini-3.5-flash is our default high-speed cloud model
+        # Model selection: Google Gemini high-speed production model
         selected_model = model or os.getenv("LLM_MODEL") or settings.llm_model
         if self.provider == "openai":
             if not selected_model or selected_model in (
-                "gemma4", "gemma4:e4b", "ollama", "gemini-2.0-flash", "gemini-2.5-flash"
+                "gemma4", "gemma4:e4b", "ollama", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-3.5-flash"
             ):
-                selected_model = "gemini-3.5-flash"
+                selected_model = "gemini-flash-lite-latest"
 
         # Legacy callers passing model="gemma4" when no cloud API key is present
         if model == "gemma4" and not api_key:
@@ -141,19 +141,34 @@ class LLMClient:
             )
         except Exception as exc:
             err_str = str(exc).lower()
-            if "model" in err_str and ("not found" in err_str or "does not exist" in err_str or "404" in err_str or "no longer available" in err_str):
-                fallback_model = "gemini-3.5-flash"
-                logger.warning(f"Model '{self.model}' not found on provider. Retrying with fallback model '{fallback_model}'...")
-                response = self._openai.chat.completions.create(
-                    model=fallback_model,
-                    messages=messages,
-                    temperature=kwargs.get("temperature", 0.3),
-                    max_tokens=kwargs.get("max_tokens", 1000),
-                    **extra,
-                )
-                self.model = fallback_model
-            else:
-                raise
+            fallback_candidates = [
+                "gemini-flash-lite-latest",
+                "gemini-3.1-flash-lite",
+                "gemini-3.5-flash-lite",
+                "gemini-3.7-flash",
+                "gemini-flash-latest",
+            ]
+            response = None
+            last_err = exc
+            for fb in fallback_candidates:
+                if fb == self.model:
+                    continue
+                try:
+                    logger.warning(f"Retrying LLM call with fallback model '{fb}' due to error on '{self.model}': {exc}")
+                    response = self._openai.chat.completions.create(
+                        model=fb,
+                        messages=messages,
+                        temperature=kwargs.get("temperature", 0.3),
+                        max_tokens=kwargs.get("max_tokens", 1000),
+                        **extra,
+                    )
+                    self.model = fb
+                    break
+                except Exception as fb_exc:
+                    last_err = fb_exc
+                    continue
+            if not response:
+                raise last_err
 
         msg = response.choices[0].message
         content = msg.content or getattr(msg, "reasoning", "") or ""

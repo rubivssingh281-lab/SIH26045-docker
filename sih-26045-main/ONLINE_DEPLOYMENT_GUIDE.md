@@ -10,7 +10,7 @@ This guide walks you through deploying the complete **IP-SAKTI Sahayak** applica
 | :--- | :--- | :--- | :--- |
 | **Frontend** | Next.js 15 App Router | **Vercel** (100% Free) | Provides the single public URL (e.g. `https://ip-sakti.vercel.app`). |
 | **Backend & RAG** | FastAPI + ChromaDB + SentenceTransformers | **Render** or **Railway** (100% Free) | `all-MiniLM-L6-v2` and `ChromaDB` (~30MB) run directly on CPU within the backend container. No paid vector DB needed. |
-| **LLM Inference** | High-speed LLM | **Google Gemini 3.5 Flash** (100% Free) | Cloud hosts cannot run 9GB local Ollama on free 512MB RAM tiers. Google Gemini provides 1,000,000 tokens/minute and 1,500 free requests/day with sub-second responses (~0.5s) at **$0.00 cost** with no credit card required. |
+| **LLM Inference** | High-speed LLM | **Google Gemini Flash** (100% Free) | Cloud hosts cannot run 9GB local Ollama on free 512MB RAM tiers. Google Gemini provides 1,000,000 tokens/minute and 1,500 free requests/day with sub-second responses (~0.5s) at **$0.00 cost** with no credit card required. |
 
 ---
 
@@ -39,7 +39,7 @@ This gives you a permanent, fast, 24/7 web link to share with anyone.
    - `LLM_PROVIDER`: `openai`
    - `OPENAI_BASE_URL`: `https://generativelanguage.googleapis.com/v1beta/openai/`
    - `OPENAI_API_KEY`: `your_gemini_api_key_here` *(starts with `AQ.` or `AIza`)*
-   - `LLM_MODEL`: `gemini-3.5-flash`
+   - `LLM_MODEL`: `gemini-flash-lite-latest`
    - `CORS_ORIGINS`: `*`
    - `SECRET_KEY`: *Any random string (e.g. `sakti-secret-key-12345`)*
 7. Click **Create Web Service**.
@@ -109,7 +109,7 @@ Hugging Face Spaces provides **2 vCPU, 16 GB RAM, 50 GB Disk for FREE**.
    - `LLM_PROVIDER`: `openai`
    - `OPENAI_BASE_URL`: `https://generativelanguage.googleapis.com/v1beta/openai/`
    - `OPENAI_API_KEY`: `your_gemini_api_key_here`
-   - `LLM_MODEL`: `gemini-3.5-flash`
+   - `LLM_MODEL`: `gemini-flash-lite-latest`
 5. Hugging Face gives you a single clean link:
    `https://username-space-name.hf.space`
 
