@@ -24,13 +24,48 @@ class TranslateResponse(BaseModel):
     target_language: str
 
 
-def _translator():
-    """Lazy import so the app still runs if the translation deps/key are absent."""
-    try:
-        from app.translation.bhashini_translator import get_translator, BhashiniTranslationError
-        return get_translator(), BhashiniTranslationError
-    except Exception as exc:  # missing package or API key
-        raise HTTPException(503, f"Translation service unavailable: {exc}")
+def _translate_with_llm(text: str, target_language: str, source_language: str | None = None) -> str:
+    from app.llm.client import call_llm
+    prompt = (
+        f"Translate the following text from {source_language or 'English'} to {target_language}.\n"
+        f"Return ONLY the direct translation without explanation or quotes:\n\n{text}"
+    )
+    system_prompt = (
+        f"You are a professional translator for an Indian Intellectual Property and Ayurvedic research application. "
+        f"Translate accurately to {target_language}."
+    )
+    res = call_llm(prompt=prompt, system_prompt=system_prompt, temperature=0.1, max_tokens=1000)
+    out = (res.get("content") or "").strip()
+    return out or text
+
+
+def _translate_batch_with_llm(texts: list[str], target_language: str, source_language: str | None = None) -> list[str]:
+    from app.llm.client import call_llm
+    results: list[str] = []
+    BATCH_SIZE = 25
+    for i in range(0, len(texts), BATCH_SIZE):
+        chunk = texts[i:i + BATCH_SIZE]
+        prompt = (
+            f"Translate each of the following UI strings from {source_language or 'English'} to {target_language}.\n"
+            f"Preserve the exact line count ({len(chunk)} lines). Output ONLY the translated strings, one per line, nothing else:\n\n"
+            + "\n".join(chunk)
+        )
+        system_prompt = (
+            f"You are a professional translator for an Indian Ayurvedic IP system. "
+            f"Translate to {target_language}. Output exactly {len(chunk)} lines with no extra text, notes, or numbering."
+        )
+        try:
+            res = call_llm(prompt=prompt, system_prompt=system_prompt, temperature=0.1, max_tokens=1500)
+            lines = [l.strip() for l in (res.get("content") or "").strip().split("\n") if l.strip()]
+            if len(lines) == len(chunk):
+                results.extend(lines)
+            else:
+                for idx, item in enumerate(chunk):
+                    results.append(lines[idx] if idx < len(lines) else item)
+        except Exception as exc:
+            logger.warning(f"Batch {i} LLM translation failed: {exc}. Using original strings.")
+            results.extend(chunk)
+    return results
 
 
 @router.post("", response_model=TranslateResponse)
@@ -39,12 +74,23 @@ def translate_text(payload: TranslateRequest):
     # Nothing to do for empty text or English target — return as-is.
     if not payload.text.strip() or payload.target_language.strip().lower() in ("english", "en"):
         return {"translated": payload.text, "target_language": payload.target_language}
-    translator, TranslationError = _translator()
+
+    # 1. Try Bhashini if configured
     try:
-        out = translator.translate_text(payload.text, payload.target_language, payload.source_language)
+        from app.translation.bhashini_translator import is_configured, get_translator
+        if is_configured():
+            out = get_translator().translate_text(payload.text, payload.target_language, payload.source_language)
+            return {"translated": out, "target_language": payload.target_language}
+    except Exception as exc:
+        logger.warning(f"Bhashini translation failed: {exc}. Trying LLM fallback...")
+
+    # 2. Try LLM translation
+    try:
+        out = _translate_with_llm(payload.text, payload.target_language, payload.source_language)
         return {"translated": out, "target_language": payload.target_language}
-    except TranslationError as exc:
-        raise HTTPException(502, str(exc))
+    except Exception as exc:
+        logger.error(f"LLM translation failed: {exc}. Returning original text.")
+        return {"translated": payload.text, "target_language": payload.target_language}
 
 
 class DictionaryRequest(BaseModel):
@@ -75,11 +121,22 @@ def translate_dictionary(payload: DictionaryRequest):
     if not values:
         return {"dictionary": payload.dictionary, "target_language": payload.target_language}
 
-    translator, TranslationError = _translator()
+    translated = None
+    # 1. Try Bhashini if configured
     try:
-        translated = translator.translate_batch(values, payload.target_language, payload.source_language)
-    except TranslationError as exc:
-        raise HTTPException(502, str(exc))
+        from app.translation.bhashini_translator import is_configured, get_translator
+        if is_configured():
+            translated = get_translator().translate_batch(values, payload.target_language, payload.source_language)
+    except Exception as exc:
+        logger.warning(f"Bhashini batch translation failed: {exc}. Falling back to LLM...")
+
+    # 2. If Bhashini is not configured or failed, use LLM
+    if translated is None or len(translated) != len(values):
+        try:
+            translated = _translate_batch_with_llm(values, payload.target_language, payload.source_language)
+        except Exception as exc:
+            logger.error(f"LLM batch translation failed: {exc}. Keeping original English dictionary.")
+            return {"dictionary": payload.dictionary, "target_language": payload.target_language}
 
     import copy
     out = copy.deepcopy(payload.dictionary)
@@ -93,7 +150,12 @@ def translate_dictionary(payload: DictionaryRequest):
 
 @router.post("/audio", response_model=TranslateResponse)
 async def translate_audio(target_language: str = Form(...), source_language: str | None = Form(None), file: UploadFile = File(...)):
-    translator, TranslationError = _translator()
+    try:
+        from app.translation.bhashini_translator import get_translator, BhashiniTranslationError
+        translator = get_translator()
+    except Exception as exc:
+        raise HTTPException(503, f"Translation service unavailable: {exc}")
+
     suffix = os.path.splitext(file.filename or "audio.wav")[1] or ".wav"
     tmp_path = None
     try:
@@ -102,7 +164,7 @@ async def translate_audio(target_language: str = Form(...), source_language: str
             tmp_path = tmp.name
         out = translator.translate_audio(tmp_path, target_language, source_language)
         return {"translated": out, "target_language": target_language}
-    except TranslationError as exc:
+    except BhashiniTranslationError as exc:
         raise HTTPException(502, str(exc))
     finally:
         if tmp_path and os.path.exists(tmp_path):
