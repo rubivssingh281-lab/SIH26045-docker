@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+
+// Scheduled Languages
 import en from "@/locales/en.json";
 import as from "@/locales/as.json";
 import bn from "@/locales/bn.json";
@@ -24,6 +26,25 @@ import sd from "@/locales/sd.json";
 import ta from "@/locales/ta.json";
 import te from "@/locales/te.json";
 import ur from "@/locales/ur.json";
+
+// Additional Indian Languages & Regional Dialects
+import awa from "@/locales/awa.json";
+import bho from "@/locales/bho.json";
+import bra from "@/locales/bra.json";
+import hne from "@/locales/hne.json";
+import gon from "@/locales/gon.json";
+import hoc from "@/locales/hoc.json";
+import xnr from "@/locales/xnr.json";
+import mag from "@/locales/mag.json";
+import lus from "@/locales/lus.json";
+import si from "@/locales/si.json";
+import tcy from "@/locales/tcy.json";
+import bhb from "@/locales/bhb.json";
+import bgc from "@/locales/bgc.json";
+import raj from "@/locales/raj.json";
+import kha from "@/locales/kha.json";
+import hinglish from "@/locales/hinglish.json";
+
 import { translateApi } from "@/lib/api";
 
 export type Language = string;
@@ -36,9 +57,10 @@ export interface LanguageOption {
   region: "Scheduled Languages" | "Additional Indian Languages" | "International";
 }
 
-// 100% Bhashini Pre-compiled Dictionaries for all 22 Official Scheduled Indian Languages + regional variants
+// 100% Pre-compiled Dictionaries for EVERY language (22 Scheduled + 16 Additional + English)
 const staticDicts: Record<string, unknown> = {
   English: en,
+  // 22 Scheduled Languages
   Assamese: as,
   Bengali: bn,
   Bodo: brx,
@@ -61,26 +83,26 @@ const staticDicts: Record<string, unknown> = {
   Tamil: ta,
   Telugu: te,
   Urdu: ur,
-  // Regional dialects mapped to Devanagari Hindi or closest scheduled language
-  Bhojpuri: hi,
-  Awadhi: hi,
-  Braj: hi,
-  Chhattisgarhi: hi,
-  Haryanvi: hi,
-  Rajasthani: hi,
-  Magahi: hi,
-  Bhili: gu,
-  Gondi: hi,
-  Kangri: doi,
-  Ho: sat,
-  Khasi: as,
-  Mizo: as,
-  Tulu: kn,
-  Sinhala: ta,
-  Hinglish: hi,
+  // Additional Indian Languages & Regional Dialects
+  Awadhi: awa,
+  Bhojpuri: bho,
+  Braj: bra,
+  Chhattisgarhi: hne,
+  Gondi: gon,
+  Ho: hoc,
+  Kangri: xnr,
+  Magahi: mag,
+  Mizo: lus,
+  Sinhala: si,
+  Tulu: tcy,
+  Bhili: bhb,
+  Haryanvi: bgc,
+  Rajasthani: raj,
+  Khasi: kha,
+  Hinglish: hinglish,
 };
 
-// Full multilingual coverage: English + 22 Scheduled Languages + Additional Indian Languages
+// Full multilingual coverage: English + 22 Scheduled Languages + 16 Additional Indian Languages
 export const LANGUAGES: LanguageOption[] = [
   // International
   { name: "English", native: "English", code: "en-IN", bhashiniCode: "en", region: "International" },
@@ -140,7 +162,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-const cacheKey = (lang: string) => `ip-sakti-dict::v6::${lang}`;
+const cacheKey = (lang: string) => `ip-sakti-dict::v7::${lang}`;
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("English");
@@ -170,7 +192,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       if (cached) { setDict(JSON.parse(cached)); return; }
     } catch {}
 
-    // Dynamic Bhashini API translation for unbundled languages
+    // Dynamic Bhashini API translation fallback
     setDict(en);
     setIsTranslating(true);
     try {
