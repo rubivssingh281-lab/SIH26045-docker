@@ -1,10 +1,10 @@
 # IP-SAKTI Sahayak
 
-An evidence-grounded decision-support system for **Ayurvedic / traditional-knowledge intellectual-property research**. It classifies formulations with a deterministic rule engine, retrieves supporting TKDL prior art (RAG), scores multi-dimensional confidence, and explains every step — all running **fully offline on a local LLM (phi3 via Ollama)**.
+An evidence-grounded decision-support system for **Ayurvedic / traditional-knowledge intellectual-property research**. It classifies formulations with a deterministic rule engine, retrieves supporting TKDL prior art (RAG), scores multi-dimensional confidence, and explains every step — all running **fully offline on a local LLM (gemma4 via Ollama)**.
 
 - **Frontend:** Next.js 15 (App Router) + TypeScript + Tailwind — `IP-SAKTI-frontend/frontend-koutsa/`
 - **Backend:** FastAPI + SQLite + ChromaDB — `backend/`
-- **LLM:** local **phi3** through **Ollama** (no API keys, no cloud)
+- **LLM:** local **gemma4** through **Ollama** (no API keys, no cloud)
 - **RAG corpus:** 694 TKDL formulations, `all-MiniLM-L6-v2` embeddings, hybrid BM25 + vector retrieval
 - **ML pipeline (offline, reference only):** `ml_models/`
 
@@ -23,12 +23,12 @@ Install these once:
 Then pull the model (~2.2 GB, one time):
 
 ```bash
-ollama pull phi3
+ollama pull gemma4
 ```
 
 Make sure Ollama is running (`ollama serve` — the desktop app starts it automatically).
 
-> **RAM note:** phi3 defaults to a 128k context. On machines with ≤8 GB RAM the backend caps the context window (`LLM_NUM_CTX=4096`) so it fits. No action needed; just know phi3 on CPU takes ~20–40s per call.
+> **RAM note:** gemma4 defaults to a 128k context. On machines with ≤8 GB RAM the backend caps the context window (`LLM_NUM_CTX=4096`) so it fits. No action needed; just know gemma4 on CPU takes ~20–40s per call.
 
 ---
 
@@ -115,12 +115,12 @@ Backend settings live in `backend/app/config.py` and can be overridden with envi
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `LLM_PROVIDER` | `ollama` | `ollama` (local) or `openai` |
-| `LLM_MODEL` | `phi3` | Ollama model/tag |
+| `LLM_MODEL` | `gemma4` | Ollama model/tag |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama endpoint |
-| `LLM_NUM_CTX` | `4096` | phi3 context cap (raise if you have RAM) |
+| `LLM_NUM_CTX` | `4096` | gemma4 context cap (raise if you have RAM) |
 | `SECRET_KEY` | dev default | **set a real value for any shared deployment** |
 
-To use OpenAI instead of local phi3: `LLM_PROVIDER=openai`, `LLM_MODEL=gpt-4o-mini`, `OPENAI_API_KEY=sk-...`.
+To use OpenAI instead of local gemma4: `LLM_PROVIDER=openai`, `LLM_MODEL=gpt-4o-mini`, `OPENAI_API_KEY=sk-...`.
 
 The frontend API timeout is generous (`NEXT_PUBLIC_API_TIMEOUT_MS`, default 300000) because the local LLM is slow on CPU.
 
@@ -143,9 +143,9 @@ npx tsc --noEmit
 
 ## 8. Troubleshooting
 
-- **"Ollama request failed" / chat returns a fallback message** → ensure `ollama serve` is running and `ollama pull phi3` completed. `ollama list` should show `phi3`.
+- **"Ollama request failed" / chat returns a fallback message** → ensure `ollama serve` is running and `ollama pull gemma4` completed. `ollama list` should show `gemma4`.
 - **"model requires more system memory"** → lower `LLM_NUM_CTX` (e.g. 2048) in `backend/.env`.
-- **Fact extraction / analysis seems stuck** → it's phi3 on CPU (~30s). The client waits up to 5 minutes.
+- **Fact extraction / analysis seems stuck** → it's gemma4 on CPU (~30s). The client waits up to 5 minutes.
 - **Port already in use** → change `--port` for the backend and update `NEXT_PUBLIC_API_BASE_URL` in `frontend-koutsa/.env.local`.
 - **Search index empty (no prior-art evidence)** → re-run `python -m scripts.ingest_corpus` from `backend/` (needs `ml_models/data/IP_SAKTI_FINAL_DATASET/retrieval_stage16/`).
 

@@ -6,7 +6,7 @@ so other teams can run it without installing Python, Node, or Ollama themselves.
 ## Prerequisites
 - Docker Desktop (or Docker Engine + Compose v2)
 - `backend/.env` must exist. If it's missing:
-  `cp backend/.env.example backend/.env` and fill in `GEMINI_API_KEY` (+ mail settings).
+  `cp backend/.env.example backend/.env` and fill in the Bhashini settings (+ mail settings).
 
 ## Start
 ```bash
@@ -33,9 +33,9 @@ To stop: `Ctrl+C`, then `docker compose down` (add `-v` to also delete the pulle
 
 ```bash
 # Linux / macOS
-LLM_MODEL=phi3 docker compose up --build
+LLM_MODEL=gemma4 docker compose up --build
 # Windows (cmd)
-set LLM_MODEL=phi3&& docker compose up --build
+set LLM_MODEL=gemma4&& docker compose up --build
 ```
 
 The app runs even before the model finishes downloading — it falls back to
@@ -44,7 +44,7 @@ deterministic, evidence-based answers and starts using the LLM once it's ready.
 ## Notes
 - **CPU-only** by default (no GPU needed). The backend image installs the CPU build
   of PyTorch to stay lean.
-- Translation uses the **Gemini API** (key from `backend/.env`); answers use the
+- Translation uses the **Bhashini API** (credentials from `backend/.env`); answers use the
   **local Ollama** model.
 - The frontend calls the backend from the browser, so it uses `http://localhost:8000`
   (already set via `NEXT_PUBLIC_API_BASE_URL`).
@@ -52,6 +52,6 @@ deterministic, evidence-based answers and starts using the LLM once it's ready.
   subsequent starts are fast.
 
 ## ⚠️ Secrets
-`backend/.env` holds live credentials (Gemini key, Gmail app password). Keep it out of
+`backend/.env` holds live credentials (Bhashini credentials, Gmail app password). Keep it out of
 public images/registries — it is passed to the backend container at runtime via
 `env_file`, not baked into the image (see `backend/.dockerignore`).

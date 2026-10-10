@@ -12,10 +12,10 @@ echo ""
 command -v python3 >/dev/null 2>&1 || { echo "Python 3 not found. Install Python 3.11+ and re-run."; exit 1; }
 command -v npm >/dev/null 2>&1     || { echo "Node.js/npm not found. Install Node 18+ and re-run."; exit 1; }
 if command -v ollama >/dev/null 2>&1; then
-  echo "Ensuring the phi3 model is available (may download ~2.2 GB the first time)..."
-  ollama pull phi3
+  echo "Ensuring the gemma4 model is available (may download ~2.2 GB the first time)..."
+  ollama pull gemma4
 else
-  echo "WARNING: Ollama not found. Install from https://ollama.com/download, then run: ollama pull phi3"
+  echo "WARNING: Ollama not found. Install from https://ollama.com/download, then run: ollama pull gemma4"
 fi
 
 # --- Backend ---

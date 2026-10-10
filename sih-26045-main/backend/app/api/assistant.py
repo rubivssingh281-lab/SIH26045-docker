@@ -206,7 +206,7 @@ def assistant_chat(payload: ChatMessage):
     results = rag_response.get("results", [])
 
     # 3. Format context and build citations/sources from retrieval (not the LLM).
-    # TKDL documents are long and phi3 runs with a capped context window, so
+    # TKDL documents are long and gemma4 runs with a capped context window, so
     # truncate each snippet to keep the system prompt in-window.
     DOC_CHAR_LIMIT = 700
     context_blocks = []

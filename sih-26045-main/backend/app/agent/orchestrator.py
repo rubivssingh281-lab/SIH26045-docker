@@ -4,7 +4,7 @@ and the TKDL retrieval corpus.
 
 Design: a DETERMINISTIC controller drives the plan (classify -> detect intents ->
 traverse graph -> retrieve evidence -> compose), which keeps reasoning reliable and
-fully functional offline. The LLM (phi3) is used ONLY to phrase the final,
+fully functional offline. The LLM (gemma4) is used ONLY to phrase the final,
 citation-grounded answer from facts the tools already gathered. It cannot introduce
 new authority; if it is unavailable the deterministic composer runs instead.
 

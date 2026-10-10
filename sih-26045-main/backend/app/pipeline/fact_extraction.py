@@ -15,7 +15,7 @@ def extract_facts(case_text: str, context: Dict[str, Any] | None = None) -> List
     # 1. Define the system prompt with the exact schema needed.
     # We ask for a JSON OBJECT with a "facts" array because Ollama's JSON mode
     # (format=json) constrains output to valid JSON; an object is the most
-    # reliable top-level shape across small local models like phi3.
+    # reliable top-level shape across small local models like gemma4.
     system_prompt = """You are an IP fact-extraction assistant. Read the formulation description and decide, for each key below, whether it is true or false based ONLY on the text.
 
 Return a JSON object of exactly this shape:

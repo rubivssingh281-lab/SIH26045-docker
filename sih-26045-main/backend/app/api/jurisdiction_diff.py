@@ -5,7 +5,7 @@ POST /jurisdiction-diff        (also aliased at /api/jurisdiction-diff)
 
 The heavy lifting is in app.jurisdictions.rules; this layer only validates input,
 invokes the deterministic engine, runs the output safeguards and shapes the HTTP
-response. It never crashes when Ollama/Phi-3 is unavailable — the engine returns a
+response. It never crashes when Ollama/Gemma4 is unavailable — the engine returns a
 deterministic, evidence-based comparison and sets `ai_unavailable: true`.
 """
 import logging

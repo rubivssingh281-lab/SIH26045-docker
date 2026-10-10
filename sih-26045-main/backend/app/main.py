@@ -9,6 +9,7 @@ from app.api.translate import router as translate_router
 from app.api.jurisdiction_diff import router as jurisdiction_diff_router
 from app.api.agent_api import router as agent_router
 from app.api.connectors import router as connectors_router
+from app.config import settings
 from sqlalchemy import inspect, text
 from app.db import engine
 from app import models
@@ -34,14 +35,25 @@ if "formulation_submissions" in inspect(engine).get_table_names():
 def create_app() -> FastAPI:
     app = FastAPI(title="SIH 2026 Patent Formulation API", version="0.1.0")
 
-    # CORS settings
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # CORS settings: allows localhost and any deployed frontend (Vercel, HF Spaces, etc.)
+    cors_origins_val = (getattr(settings, "cors_origins", "") or "*").strip()
+    if cors_origins_val == "*":
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origin_regex=r"^https?://.*",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    else:
+        origins = [o.strip() for o in cors_origins_val.split(",") if o.strip()]
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     app.include_router(health.router)
     app.include_router(auth_router)

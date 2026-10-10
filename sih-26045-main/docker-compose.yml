@@ -8,11 +8,11 @@
 #
 # On first run the "ollama-pull" service downloads the LLM (LLM_MODEL, default
 # gemma4:e4b ~9 GB). Use a lighter model instead:
-#   Linux/macOS:  LLM_MODEL=phi3 docker compose up --build
-#   Windows cmd:  set LLM_MODEL=phi3&& docker compose up --build
+#   Linux/macOS:  LLM_MODEL=gemma4 docker compose up --build
+#   Windows cmd:  set LLM_MODEL=gemma4&& docker compose up --build
 #
 # Requires backend/.env to exist (copy backend/.env.example -> backend/.env and
-# fill in the GEMINI_API_KEY + mail settings). The app still runs if the LLM model
+# fill in the Bhashini + mail settings). The app still runs if the LLM model
 # isn't ready — it falls back to deterministic, evidence-based answers.
 
 services:

@@ -1,14 +1,14 @@
-from app.translation.gemini_translator import (
-    GeminiTranslator,
-    GeminiTranslationError,
+from app.translation.bhashini_translator import (
+    BhashiniTranslator,
+    BhashiniTranslationError,
     translate,
     get_translator,
     SUPPORTED_AUDIO_TYPES,
 )
 
 __all__ = [
-    "GeminiTranslator",
-    "GeminiTranslationError",
+    "BhashiniTranslator",
+    "BhashiniTranslationError",
     "translate",
     "get_translator",
     "SUPPORTED_AUDIO_TYPES",

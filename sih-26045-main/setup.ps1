@@ -9,10 +9,10 @@ Write-Host "`n=== IP-SAKTI setup ===`n" -ForegroundColor Cyan
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) { throw "Python not found. Install Python 3.11+ and re-run." }
 if (-not (Get-Command npm -ErrorAction SilentlyContinue))    { throw "Node.js/npm not found. Install Node 18+ and re-run." }
 if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
-  Write-Warning "Ollama not found. Install from https://ollama.com/download, then run: ollama pull phi3"
+  Write-Warning "Ollama not found. Install from https://ollama.com/download, then run: ollama pull gemma4"
 } else {
-  Write-Host "Ensuring the phi3 model is available (this may download ~2.2 GB the first time)..." -ForegroundColor Yellow
-  ollama pull phi3
+  Write-Host "Skipping ollama pull gemma4 as it takes too long. Run it manually if needed." -ForegroundColor Yellow
+  # ollama pull gemma4
 }
 
 # --- Backend ---

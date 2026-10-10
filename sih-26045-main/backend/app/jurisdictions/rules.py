@@ -4,7 +4,7 @@ Deterministic Jurisdiction-Diff engine for IP-SAKTI Sahayak.
 CORE PRINCIPLE: the LLM must NOT invent legal rules. Every jurisdiction-specific
 legal/regulatory statement returned here comes from the structured configuration
 files `india.json` / `international.json` (a deterministic rules layer), never from
-the model. The LLM (Phi-3 via Ollama) is used ONLY to phrase the already-computed
+the model. The LLM (Gemma4 via Ollama) is used ONLY to phrase the already-computed
 differences in plain language, and the pipeline works fully without it.
 
 The engine reuses the existing retrieval + citation-validation + confidence
@@ -179,7 +179,7 @@ def _fallback_explanation(diff: dict) -> Dict[str, str]:
 
 def _coerce_str(value: Any, prefer_key: str = "") -> str:
     """
-    Small models (phi3) sometimes nest objects instead of returning a plain string.
+    Small models (gemma4) sometimes nest objects instead of returning a plain string.
     Flatten to a clean sentence: prefer a matching sub-key, else join string leaves.
     """
     if isinstance(value, str):
@@ -195,7 +195,7 @@ def _coerce_str(value: Any, prefer_key: str = "") -> str:
 
 
 def _llm_explanation(diff: dict) -> Dict[str, Any]:
-    """Ask Phi-3 to phrase the already-computed diff. Falls back deterministically."""
+    """Ask Gemma4 to phrase the already-computed diff. Falls back deterministically."""
     try:
         from app.llm.client import call_llm  # lazy: keep engine importable without LLM
     except Exception:

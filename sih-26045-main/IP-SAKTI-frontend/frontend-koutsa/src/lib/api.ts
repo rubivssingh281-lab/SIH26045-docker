@@ -5,7 +5,7 @@ import { mockAbsAssessment, mockAnalysis, mockCases, mockFacts, mockTrace } from
 const useMock = false;
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 const assistantChatPath = process.env.NEXT_PUBLIC_ASSISTANT_CHAT_PATH || "/assistant/chat";
-// Fact extraction, analysis and the assistant run a local LLM (phi3 via Ollama)
+// Fact extraction, analysis and the assistant run a local LLM (gemma4 via Ollama)
 // that can take tens of seconds on CPU, so the client timeout must be generous.
 const apiTimeout = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 300000;
 
@@ -224,7 +224,7 @@ export const assistantApi = {
 };
 
 export const translateApi = {
-  // Translate arbitrary text into the target UI language via the backend (Gemini).
+  // Translate arbitrary text into the target UI language via the Bhashini backend.
   // Returns the original text on any failure or for English, so callers are safe.
   async text(text: string, targetLanguage: string): Promise<string> {
     if (!text || !text.trim() || !targetLanguage || targetLanguage.toLowerCase() === "english") return text;
@@ -240,7 +240,7 @@ export const translateApi = {
     const { data } = await api.post<{ dictionary: Record<string, unknown> }>(
       "/translate/dictionary",
       { dictionary, target_language: targetLanguage },
-      { timeout: 600000 } // local Gemma translates the full UI dictionary in chunks (~4 min worst case on CPU); cached permanently after the first switch
+      { timeout: 600000 } // Bhashini translates the full UI dictionary in chunks; cached after the first switch
     );
     return data.dictionary;
   }

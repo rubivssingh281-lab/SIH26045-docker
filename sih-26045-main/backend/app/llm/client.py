@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 class LLMClient:
     """
-    Unified LLM wrapper. Defaults to the local Ollama runtime (phi3) via its
+    Unified LLM wrapper. Defaults to the local Ollama runtime (gemma4) via its
     native /api/chat endpoint, which — unlike Ollama's OpenAI-compatible /v1
-    shim — honors `options.num_ctx`. That matters because phi3 defaults to a
+    shim — honors `options.num_ctx`. That matters because gemma4 defaults to a
     128k context whose KV cache will not fit in modest RAM; we cap it via
     settings.llm_num_ctx.
 
@@ -29,8 +29,8 @@ class LLMClient:
     def __init__(self, model: str | None = None, provider: str | None = None):
         self.provider = (provider or settings.llm_provider or "ollama").lower()
         self.model = model or settings.llm_model
-        # Legacy callers may pass model="phi3" to force local; treat that as ollama.
-        if model == "phi3":
+        # Legacy callers may pass model="gemma4" to force local; treat that as ollama.
+        if model == "gemma4":
             self.provider = "ollama"
         self.ollama_base = settings.ollama_base_url.rstrip("/")
         if self.ollama_base.endswith("/v1"):
@@ -38,9 +38,10 @@ class LLMClient:
 
         self._openai = None
         if self.provider == "openai":
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = os.getenv("OPENAI_API_KEY") or settings.openai_api_key
+            base_url = (os.getenv("OPENAI_BASE_URL") or settings.openai_base_url or "").strip() or None
             if OpenAI and api_key:
-                self._openai = OpenAI(api_key=api_key)
+                self._openai = OpenAI(api_key=api_key, base_url=base_url)
             else:
                 logger.warning("OpenAI provider selected but package/API key missing; LLM calls will fail.")
 

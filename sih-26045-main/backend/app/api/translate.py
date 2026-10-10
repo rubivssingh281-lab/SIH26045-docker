@@ -1,7 +1,6 @@
 """
-Translation endpoints — text, UI dictionary and audio are all translated by the
-Gemini cloud model (see gemini_translator). The local Gemma model is reserved for
-the core answer-generation pipeline, not translation.
+Translation endpoints backed exclusively by the Bhashini API. The local LLM is
+reserved for the core answer-generation pipeline, not translation.
 """
 import os
 import tempfile
@@ -17,6 +16,7 @@ router = APIRouter(prefix="/translate", tags=["Translation"])
 class TranslateRequest(BaseModel):
     text: str = Field(..., description="Text to translate")
     target_language: str = Field(..., description="Target language, e.g. Hindi / Tamil / Marathi")
+    source_language: str | None = Field(None, description="Source language; defaults to configured Bhashini source")
 
 
 class TranslateResponse(BaseModel):
@@ -27,8 +27,8 @@ class TranslateResponse(BaseModel):
 def _translator():
     """Lazy import so the app still runs if the translation deps/key are absent."""
     try:
-        from app.translation.gemini_translator import get_translator, GeminiTranslationError
-        return get_translator(), GeminiTranslationError
+        from app.translation.bhashini_translator import get_translator, BhashiniTranslationError
+        return get_translator(), BhashiniTranslationError
     except Exception as exc:  # missing package or API key
         raise HTTPException(503, f"Translation service unavailable: {exc}")
 
@@ -41,7 +41,7 @@ def translate_text(payload: TranslateRequest):
         return {"translated": payload.text, "target_language": payload.target_language}
     translator, TranslationError = _translator()
     try:
-        out = translator.translate_text(payload.text, payload.target_language)
+        out = translator.translate_text(payload.text, payload.target_language, payload.source_language)
         return {"translated": out, "target_language": payload.target_language}
     except TranslationError as exc:
         raise HTTPException(502, str(exc))
@@ -50,6 +50,7 @@ def translate_text(payload: TranslateRequest):
 class DictionaryRequest(BaseModel):
     dictionary: dict = Field(..., description="Nested dict of English UI strings")
     target_language: str
+    source_language: str | None = None
 
 
 @router.post("/dictionary")
@@ -76,7 +77,7 @@ def translate_dictionary(payload: DictionaryRequest):
 
     translator, TranslationError = _translator()
     try:
-        translated = translator.translate_batch(values, payload.target_language)
+        translated = translator.translate_batch(values, payload.target_language, payload.source_language)
     except TranslationError as exc:
         raise HTTPException(502, str(exc))
 
@@ -91,7 +92,7 @@ def translate_dictionary(payload: DictionaryRequest):
 
 
 @router.post("/audio", response_model=TranslateResponse)
-async def translate_audio(target_language: str = Form(...), file: UploadFile = File(...)):
+async def translate_audio(target_language: str = Form(...), source_language: str | None = Form(None), file: UploadFile = File(...)):
     translator, TranslationError = _translator()
     suffix = os.path.splitext(file.filename or "audio.wav")[1] or ".wav"
     tmp_path = None
@@ -99,7 +100,7 @@ async def translate_audio(target_language: str = Form(...), file: UploadFile = F
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             tmp.write(await file.read())
             tmp_path = tmp.name
-        out = translator.translate_audio(tmp_path, target_language)
+        out = translator.translate_audio(tmp_path, target_language, source_language)
         return {"translated": out, "target_language": target_language}
     except TranslationError as exc:
         raise HTTPException(502, str(exc))
