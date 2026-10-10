@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter
 from app.rag.prior_art import get_vector_store
 
@@ -9,8 +10,15 @@ router = APIRouter(prefix="/health", tags=["health"])
 
 @router.get("", response_model=HealthResponse)
 def healthcheck():
+    from app.config import settings
+    llm_configured = bool(
+        (settings.llm_provider == "openai" and bool(settings.openai_api_key or os.getenv("OPENAI_API_KEY")))
+        or settings.llm_provider == "ollama"
+    )
     dependencies = {
-        "llm": "not_configured",
+        "llm": "configured" if llm_configured else "missing_key",
+        "llm_provider": settings.llm_provider,
+        "llm_model": settings.llm_model,
         "vector_store": "unavailable",
         "bhashini": "configured" if is_configured() else "not_configured",
     }

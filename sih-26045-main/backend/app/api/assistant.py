@@ -258,10 +258,18 @@ def assistant_chat(payload: ChatMessage):
         return ChatResponse(text=answer, citations=citations, sources=sources)
     except Exception as e:
         logger.error(f"LLM failure in assistant chat: {e}")
+        from app.config import settings
+        if settings.llm_provider == "openai":
+            err_msg = (f"Sahayak AI could not reach the cloud LLM ({settings.llm_model}): {e}. "
+                       "The retrieved research sources below may still help. "
+                       "Check your OPENAI_API_KEY and model settings in Render.")
+        else:
+            err_msg = ("Sahayak AI could not reach the language model right now. "
+                       "For online cloud deployment, please set LLM_PROVIDER=openai, "
+                       "OPENAI_BASE_URL=https://api.groq.com/openai/v1, OPENAI_API_KEY, "
+                       f"and LLM_MODEL in Render's Environment tab. (Local error: {e})")
         return ChatResponse(
-            text=("Sahayak AI could not reach the language model right now. "
-                  "The retrieved research sources below may still help. "
-                  "(Ensure `ollama serve` is running and the model is pulled.)"),
+            text=err_msg,
             citations=citations,
             sources=sources,
         )

@@ -27,23 +27,52 @@ class LLMClient:
     """
 
     def __init__(self, model: str | None = None, provider: str | None = None):
-        self.provider = (provider or settings.llm_provider or "ollama").lower()
-        self.model = model or settings.llm_model
-        # Legacy callers may pass model="gemma4" to force local; treat that as ollama.
-        if model == "gemma4":
+        api_key = (os.getenv("OPENAI_API_KEY") or os.getenv("GROQ_API_KEY") or settings.openai_api_key or "").strip()
+        base_url = (os.getenv("OPENAI_BASE_URL") or os.getenv("GROQ_BASE_URL") or settings.openai_base_url or "").strip()
+        configured_provider = (provider or os.getenv("LLM_PROVIDER") or settings.llm_provider or "").lower()
+
+        # Auto-detect Groq keys (starts with gsk_) or Gemini keys (starts with AIza)
+        if api_key.startswith("gsk_"):
+            if not base_url:
+                base_url = "https://api.groq.com/openai/v1"
+            if not configured_provider or configured_provider == "ollama":
+                configured_provider = "openai"
+        elif api_key.startswith("AIza"):
+            if not base_url:
+                base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+            if not configured_provider or configured_provider == "ollama":
+                configured_provider = "openai"
+        elif api_key and (not configured_provider or configured_provider == "ollama"):
+            configured_provider = "openai"
+
+        self.provider = configured_provider or "ollama"
+
+        # Model selection: ensure a valid cloud model is used if in openai mode
+        selected_model = model or os.getenv("LLM_MODEL") or settings.llm_model
+        if self.provider == "openai" and (not selected_model or selected_model in ("gemma4", "gemma4:e4b", "ollama")):
+            if "groq.com" in (base_url or "") or api_key.startswith("gsk_"):
+                selected_model = "llama-3.3-70b-versatile"
+            elif "googleapis.com" in (base_url or "") or api_key.startswith("AIza"):
+                selected_model = "gemini-2.0-flash"
+            else:
+                selected_model = "gpt-4o-mini"
+
+        # Legacy callers passing model="gemma4" when no cloud API key is present
+        if model == "gemma4" and not api_key:
             self.provider = "ollama"
-        self.ollama_base = settings.ollama_base_url.rstrip("/")
+
+        self.model = selected_model
+
+        self.ollama_base = (os.getenv("OLLAMA_BASE_URL") or settings.ollama_base_url or "http://localhost:11434").rstrip("/")
         if self.ollama_base.endswith("/v1"):
             self.ollama_base = self.ollama_base[:-3]
 
         self._openai = None
         if self.provider == "openai":
-            api_key = os.getenv("OPENAI_API_KEY") or settings.openai_api_key
-            base_url = (os.getenv("OPENAI_BASE_URL") or settings.openai_base_url or "").strip() or None
             if OpenAI and api_key:
-                self._openai = OpenAI(api_key=api_key, base_url=base_url)
+                self._openai = OpenAI(api_key=api_key, base_url=base_url or None)
             else:
-                logger.warning("OpenAI provider selected but package/API key missing; LLM calls will fail.")
+                logger.warning("OpenAI provider selected but package or API key is missing; LLM calls will fail.")
 
     def _generate_ollama(self, prompt: str, system_prompt: str | None, **kwargs: Any) -> Dict[str, Any]:
         messages = []
