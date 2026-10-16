@@ -133,6 +133,8 @@ async def signup(
         db.commit()
         db.refresh(new_user)
 
+    if settings.supabase_configured:
+        await send_supabase_otp(new_user.email)
     dev_otp = _issue_otp(db, background_tasks, new_user.email)
 
     return {
@@ -185,6 +187,9 @@ async def request_otp(
         db.commit()
         db.refresh(user)
 
+    if settings.supabase_configured:
+        await send_supabase_otp(user.email)
+
     dev_otp = _issue_otp(db, background_tasks, user.email)
     return {
         "message": "Verification code sent to your email." if settings.mail_configured else "OTP sent successfully",
@@ -192,25 +197,33 @@ async def request_otp(
     }
 
 @router.post("/verify-otp", response_model=AuthResponse)
-def verify_otp(otp_in: OTPVerify, db: Session = Depends(get_db)):
+async def verify_otp(otp_in: OTPVerify, db: Session = Depends(get_db)):
     email = _normalize_email(otp_in.email)
     code = (otp_in.otp_code or "").strip()
 
-    # Newest matching code first, so a re-issued OTP supersedes older ones.
-    otp_record = db.query(OTPRecord).filter(
-        OTPRecord.email == email,
-        OTPRecord.otp_code == code
-    ).order_by(OTPRecord.id.desc()).first()
+    is_verified = False
+    if settings.supabase_configured:
+        is_verified = await verify_supabase_otp(email, code)
 
-    if not otp_record:
-        raise HTTPException(status_code=400, detail="Invalid OTP code")
+    if not is_verified:
+        # Check local/Supabase OTPRecord table
+        otp_record = db.query(OTPRecord).filter(
+            OTPRecord.email == email,
+            OTPRecord.otp_code == code
+        ).order_by(OTPRecord.id.desc()).first()
 
-    now = datetime.now(timezone.utc)
-    if otp_record.expires_at.tzinfo is None:
-        now = now.replace(tzinfo=None)
+        if not otp_record:
+            raise HTTPException(status_code=400, detail="Invalid OTP code")
 
-    if now > otp_record.expires_at:
-        raise HTTPException(status_code=400, detail="OTP expired")
+        now = datetime.now(timezone.utc)
+        if otp_record.expires_at.tzinfo is None:
+            now = now.replace(tzinfo=None)
+
+        if now > otp_record.expires_at:
+            raise HTTPException(status_code=400, detail="OTP expired")
+
+        db.delete(otp_record)
+        db.commit()
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -219,9 +232,9 @@ def verify_otp(otp_in: OTPVerify, db: Session = Depends(get_db)):
     # Mark user as verified
     if not user.is_verified:
         user.is_verified = True
-        
-    db.delete(otp_record)
-    db.commit()
+        db.add(user)
+        db.commit()
+        db.refresh(user)
     
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
