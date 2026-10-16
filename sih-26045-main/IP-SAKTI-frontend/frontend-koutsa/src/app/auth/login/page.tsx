@@ -54,6 +54,38 @@ export default function LoginPage() {
     if (otpStage === "verify") otpRef.current?.focus();
   }, [otpStage]);
 
+  useEffect(() => {
+    async function handleRedirectResult() {
+      try {
+        const { getRedirectResult } = await import("firebase/auth");
+        const { auth } = await import("@/lib/firebase");
+        const userCred = await getRedirectResult(auth);
+        if (userCred?.user) {
+          setLoading(true);
+          const googleUser = userCred.user;
+          const names = (googleUser.displayName || "").split(" ");
+          const firstName = names[0] || "Researcher";
+          const lastName = names.slice(1).join(" ") || "";
+          const idToken = await googleUser.getIdToken();
+
+          const result = await authApi.googleLogin({
+            email: googleUser.email || "",
+            first_name: firstName,
+            last_name: lastName,
+            id_token: idToken
+          });
+          if (result.access_token) {
+            setSession(result.access_token, result.user);
+            router.push(next);
+          }
+        }
+      } catch (err) {
+        console.error("Google redirect handling error", err);
+      }
+    }
+    handleRedirectResult();
+  }, [next, router, setSession]);
+
   function switchMode(nextMode: LoginMode) {
     setMode(nextMode); setError(""); setInfo(""); setOtpStage("request"); setOtp("");
   }
@@ -102,36 +134,44 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setError(""); setInfo(""); setLoading(true);
     try {
-      const { signInWithPopup } = await import("firebase/auth");
+      const { signInWithPopup, signInWithRedirect } = await import("firebase/auth");
       const { auth, googleProvider } = await import("@/lib/firebase");
-      const userCred = await signInWithPopup(auth, googleProvider);
-      const googleUser = userCred.user;
-      const names = (googleUser.displayName || "").split(" ");
-      const firstName = names[0] || "Researcher";
-      const lastName = names.slice(1).join(" ") || "";
-      const idToken = await googleUser.getIdToken();
+      
+      try {
+        const userCred = await signInWithPopup(auth, googleProvider);
+        const googleUser = userCred.user;
+        const names = (googleUser.displayName || "").split(" ");
+        const firstName = names[0] || "Researcher";
+        const lastName = names.slice(1).join(" ") || "";
+        const idToken = await googleUser.getIdToken();
 
-      const result = await authApi.googleLogin({
-        email: googleUser.email || "",
-        first_name: firstName,
-        last_name: lastName,
-        id_token: idToken
-      });
+        const result = await authApi.googleLogin({
+          email: googleUser.email || "",
+          first_name: firstName,
+          last_name: lastName,
+          id_token: idToken
+        });
 
-      if (!result.access_token) throw new Error("Google authentication failed");
-      setSession(result.access_token, result.user);
-      router.push(next);
-    } catch (err: any) {
-      if (err?.code === "auth/popup-closed-by-user") {
-        setLoading(false);
-        return;
+        if (!result.access_token) throw new Error("Google authentication failed");
+        setSession(result.access_token, result.user);
+        router.push(next);
+      } catch (popupErr: any) {
+        if (popupErr?.code === "auth/popup-closed-by-user") {
+          setLoading(false);
+          return;
+        }
+        if (popupErr?.code === "auth/popup-blocked" || popupErr?.code === "auth/cancelled-popup-request") {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        throw popupErr;
       }
+    } catch (err: any) {
       if (err?.code === "auth/unauthorized-domain") {
         setError("This domain is not authorized in Firebase Console. Add this domain under Authentication > Settings > Authorized Domains.");
       } else {
         setError(getApiErrorMessage(err, "Could not sign in with Google. Check Firebase configuration."));
       }
-    } finally {
       setLoading(false);
     }
   }
