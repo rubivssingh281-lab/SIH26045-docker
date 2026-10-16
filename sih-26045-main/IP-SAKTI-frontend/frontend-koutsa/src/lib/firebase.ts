@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // Firebase configuration for project: ip-sakti-sahayak-22b24
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBkWKlgJ3R8HWLGyCTHR86durmEUaA5MXs",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBkWKlgJ3RBHWlGyCTHR86durmEUaA5MXs",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "ip-sakti-sahayak-22b24.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "ip-sakti-sahayak-22b24",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "ip-sakti-sahayak-22b24.firebasestorage.app",
