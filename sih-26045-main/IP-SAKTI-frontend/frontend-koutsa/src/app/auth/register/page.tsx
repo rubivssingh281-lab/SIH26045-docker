@@ -23,39 +23,68 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  async function processGoogleUser(googleUser: any) {
+    setLoading(true);
+    setError("");
+    try {
+      const names = (googleUser.displayName || "").split(" ");
+      const firstName = names[0] || "Researcher";
+      const lastName = names.slice(1).join(" ") || "";
+      const idToken = await googleUser.getIdToken();
+
+      const result = await authApi.googleLogin({
+        email: googleUser.email || "",
+        first_name: firstName,
+        last_name: lastName,
+        id_token: idToken
+      });
+      if (result.access_token) {
+        setSession(result.access_token, result.user);
+        window.location.href = "/dashboard";
+      } else {
+        setError("Sign-in failed. Please try again.");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Google sign-in error", err);
+      setError(getApiErrorMessage(err, "We couldn't complete sign in with Google."));
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     let isMounted = true;
-    async function handleRedirectResult() {
+    async function handlePendingRedirect() {
       try {
-        const { getRedirectResult } = await import("firebase/auth");
+        const { getRedirectResult, onAuthStateChanged } = await import("firebase/auth");
         const { auth } = await import("@/lib/firebase");
+
         const userCred = await getRedirectResult(auth);
         if (userCred?.user && isMounted) {
-          setLoading(true);
-          const googleUser = userCred.user;
-          const names = (googleUser.displayName || "").split(" ");
-          const firstName = names[0] || "Researcher";
-          const lastName = names.slice(1).join(" ") || "";
-          const idToken = await googleUser.getIdToken();
+          sessionStorage.removeItem("ip_sakti_google_pending");
+          await processGoogleUser(userCred.user);
+          return;
+        }
 
-          const result = await authApi.googleLogin({
-            email: googleUser.email || "",
-            first_name: firstName,
-            last_name: lastName,
-            id_token: idToken
+        if (typeof window !== "undefined" && sessionStorage.getItem("ip_sakti_google_pending") === "1") {
+          const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user && isMounted) {
+              sessionStorage.removeItem("ip_sakti_google_pending");
+              unsubscribe();
+              await processGoogleUser(user);
+            }
           });
-          if (result.access_token) {
-            setSession(result.access_token, result.user);
-            router.push("/dashboard");
-          }
+          setTimeout(() => {
+            if (isMounted) sessionStorage.removeItem("ip_sakti_google_pending");
+          }, 6000);
         }
       } catch (err) {
         console.error("Google redirect handling error", err);
       }
     }
-    handleRedirectResult();
+    handlePendingRedirect();
     return () => { isMounted = false; };
-  }, [router, setSession]);
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setError("");
@@ -74,11 +103,12 @@ export default function RegisterPage() {
           else sessionStorage.removeItem("ip-sakti-dev-otp");
           if (result.message) sessionStorage.setItem("ip-sakti-verify-msg", result.message);
         } catch { /* sessionStorage may be unavailable; ignore */ }
-        router.push(`/auth/verify?mode=register&email=${encodeURIComponent(cleanEmail)}`);
+        window.location.href = `/auth/verify?mode=register&email=${encodeURIComponent(cleanEmail)}`;
       } else if (result.access_token) {
-        setSession(result.access_token, result.user); router.push("/dashboard");
+        setSession(result.access_token, result.user);
+        window.location.href = "/dashboard";
       } else {
-        router.push(`/auth/login?mode=otp&email=${encodeURIComponent(email)}`);
+        window.location.href = `/auth/login?mode=otp&email=${encodeURIComponent(email)}`;
       }
     } catch (err) { setError(getApiErrorMessage(err, "We couldn't create your account right now. Please try again.")); }
     finally { setLoading(false); }
@@ -87,14 +117,31 @@ export default function RegisterPage() {
   async function handleGoogleSignIn() {
     setError(""); setLoading(true);
     try {
-      const { signInWithRedirect } = await import("firebase/auth");
+      const { signInWithPopup, signInWithRedirect } = await import("firebase/auth");
       const { auth, googleProvider } = await import("@/lib/firebase");
-      await signInWithRedirect(auth, googleProvider);
+      try {
+        const userCred = await signInWithPopup(auth, googleProvider);
+        if (userCred?.user) {
+          await processGoogleUser(userCred.user);
+          return;
+        }
+      } catch (popupErr: any) {
+        if (popupErr?.code === "auth/popup-closed-by-user") {
+          setLoading(false);
+          return;
+        }
+        if (popupErr?.code === "auth/popup-blocked" || popupErr?.code === "auth/cancelled-popup-request") {
+          sessionStorage.setItem("ip_sakti_google_pending", "1");
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        throw popupErr;
+      }
     } catch (err: any) {
       if (err?.code === "auth/unauthorized-domain") {
         setError("This domain is not authorized in Firebase Console. Add this domain under Authentication > Settings > Authorized Domains.");
       } else {
-        setError(getApiErrorMessage(err, "Could not redirect to Google sign-in."));
+        setError(getApiErrorMessage(err, "Could not sign in with Google."));
       }
       setLoading(false);
     }

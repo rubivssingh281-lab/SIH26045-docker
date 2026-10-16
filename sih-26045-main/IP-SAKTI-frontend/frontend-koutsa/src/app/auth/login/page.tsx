@@ -54,37 +54,68 @@ export default function LoginPage() {
     if (otpStage === "verify") otpRef.current?.focus();
   }, [otpStage]);
 
-  useEffect(() => {
-    async function handleRedirectResult() {
-      try {
-        const { getRedirectResult } = await import("firebase/auth");
-        const { auth } = await import("@/lib/firebase");
-        const userCred = await getRedirectResult(auth);
-        if (userCred?.user) {
-          setLoading(true);
-          const googleUser = userCred.user;
-          const names = (googleUser.displayName || "").split(" ");
-          const firstName = names[0] || "Researcher";
-          const lastName = names.slice(1).join(" ") || "";
-          const idToken = await googleUser.getIdToken();
+  async function processGoogleUser(googleUser: any) {
+    setLoading(true);
+    setError("");
+    try {
+      const names = (googleUser.displayName || "").split(" ");
+      const firstName = names[0] || "Researcher";
+      const lastName = names.slice(1).join(" ") || "";
+      const idToken = await googleUser.getIdToken();
 
-          const result = await authApi.googleLogin({
-            email: googleUser.email || "",
-            first_name: firstName,
-            last_name: lastName,
-            id_token: idToken
+      const result = await authApi.googleLogin({
+        email: googleUser.email || "",
+        first_name: firstName,
+        last_name: lastName,
+        id_token: idToken
+      });
+      if (result.access_token) {
+        setSession(result.access_token, result.user);
+        window.location.href = next;
+      } else {
+        setError("Sign-in failed. Please try again.");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Google sign-in error", err);
+      setError(getApiErrorMessage(err, "We couldn't complete sign in with Google."));
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+    async function handlePendingRedirect() {
+      try {
+        const { getRedirectResult, onAuthStateChanged } = await import("firebase/auth");
+        const { auth } = await import("@/lib/firebase");
+
+        const userCred = await getRedirectResult(auth);
+        if (userCred?.user && isMounted) {
+          sessionStorage.removeItem("ip_sakti_google_pending");
+          await processGoogleUser(userCred.user);
+          return;
+        }
+
+        if (typeof window !== "undefined" && sessionStorage.getItem("ip_sakti_google_pending") === "1") {
+          const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user && isMounted) {
+              sessionStorage.removeItem("ip_sakti_google_pending");
+              unsubscribe();
+              await processGoogleUser(user);
+            }
           });
-          if (result.access_token) {
-            setSession(result.access_token, result.user);
-            router.push(next);
-          }
+          setTimeout(() => {
+            if (isMounted) sessionStorage.removeItem("ip_sakti_google_pending");
+          }, 6000);
         }
       } catch (err) {
         console.error("Google redirect handling error", err);
       }
     }
-    handleRedirectResult();
-  }, [next, router, setSession]);
+    handlePendingRedirect();
+    return () => { isMounted = false; };
+  }, [next]);
 
   function switchMode(nextMode: LoginMode) {
     setMode(nextMode); setError(""); setInfo(""); setOtpStage("request"); setOtp("");
@@ -99,7 +130,7 @@ export default function LoginPage() {
       const result = await authApi.login(email, password);
       if (!result.access_token) throw new Error("Authentication failed");
       setSession(result.access_token, result.user);
-      router.push(next);
+      window.location.href = next;
     } catch (err) {
       setError(getApiErrorMessage(err, "We couldn't sign you in. Check your credentials and try again."));
     } finally { setLoading(false); }
@@ -126,7 +157,8 @@ export default function LoginPage() {
     try {
       const result = await authApi.verifyOtp(email, otp);
       if (!result.access_token) return setError("That OTP is incorrect. Check your email and try again.");
-      setSession(result.access_token, result.user); router.push(next);
+      setSession(result.access_token, result.user);
+      window.location.href = next;
     } catch (err) { setError(getApiErrorMessage(err, "We couldn't verify the OTP right now.")); }
     finally { setLoading(false); }
   }
@@ -134,14 +166,31 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setError(""); setInfo(""); setLoading(true);
     try {
-      const { signInWithRedirect } = await import("firebase/auth");
+      const { signInWithPopup, signInWithRedirect } = await import("firebase/auth");
       const { auth, googleProvider } = await import("@/lib/firebase");
-      await signInWithRedirect(auth, googleProvider);
+      try {
+        const userCred = await signInWithPopup(auth, googleProvider);
+        if (userCred?.user) {
+          await processGoogleUser(userCred.user);
+          return;
+        }
+      } catch (popupErr: any) {
+        if (popupErr?.code === "auth/popup-closed-by-user") {
+          setLoading(false);
+          return;
+        }
+        if (popupErr?.code === "auth/popup-blocked" || popupErr?.code === "auth/cancelled-popup-request") {
+          sessionStorage.setItem("ip_sakti_google_pending", "1");
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        throw popupErr;
+      }
     } catch (err: any) {
       if (err?.code === "auth/unauthorized-domain") {
         setError("Domain not authorized in Firebase Console. Add this domain under Authentication > Settings > Authorized Domains.");
       } else {
-        setError(getApiErrorMessage(err, "Could not redirect to Google Sign-In."));
+        setError(getApiErrorMessage(err, "Could not sign in with Google."));
       }
       setLoading(false);
     }

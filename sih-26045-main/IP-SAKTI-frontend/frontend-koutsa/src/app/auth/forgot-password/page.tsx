@@ -143,7 +143,7 @@ export default function ForgotPasswordPage() {
       setSession(res.access_token, res.user);
 
       setTimeout(() => {
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }, 1500);
     } catch (err) {
       setError(getApiErrorMessage(err, "Invalid or expired reset code. Please check or request a new code."));

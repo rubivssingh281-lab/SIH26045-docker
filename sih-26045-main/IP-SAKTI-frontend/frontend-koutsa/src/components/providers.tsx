@@ -26,13 +26,15 @@ export function useAuth() {
 function setBrowserSession(token: string, user?: AuthUser | null) {
   localStorage.setItem("ip-sakti-token", token);
   if (user) localStorage.setItem("ip-sakti-user", JSON.stringify(user));
-  document.cookie = `ip_sakti_session=${encodeURIComponent(token)}; path=/; max-age=${60 * 60 * 8}; SameSite=Lax`;
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `ip_sakti_session=${encodeURIComponent(token)}; path=/; max-age=${60 * 60 * 8}; SameSite=Lax${secure}`;
 }
 
 function clearBrowserSession() {
   localStorage.removeItem("ip-sakti-token");
   localStorage.removeItem("ip-sakti-user");
-  document.cookie = "ip_sakti_session=; path=/; max-age=0; SameSite=Lax";
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `ip_sakti_session=; path=/; max-age=0; SameSite=Lax${secure}`;
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
