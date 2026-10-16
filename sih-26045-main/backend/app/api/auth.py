@@ -133,26 +133,16 @@ async def signup(
         db.commit()
         db.refresh(new_user)
 
-    dev_otp = None
-    if settings.supabase_configured:
-        supabase_sent = await send_supabase_otp(new_user.email)
-        if not supabase_sent:
-            dev_otp = _issue_otp(db, background_tasks, new_user.email)
-    else:
-        dev_otp = _issue_otp(db, background_tasks, new_user.email)
+    dev_otp = _issue_otp(db, background_tasks, new_user.email)
 
     return {
         "user": UserResponse.model_validate(new_user, from_attributes=True).model_dump(),
         "requires_otp": True,
         "message": (
-            "Verification code sent to your email via Supabase."
-            if (settings.supabase_configured and dev_otp is None)
-            else (
-                "Verification code sent to your email."
-                if settings.mail_configured
-                else "Email delivery is not configured — use the code shown below "
-                     "(it is also printed in the backend logs)."
-            )
+            "Verification code sent to your email."
+            if settings.mail_configured
+            else "Email delivery is not configured — use the code shown below "
+                 "(it is also printed in the backend logs)."
         ),
         "dev_otp": dev_otp,
     }
@@ -183,57 +173,44 @@ async def request_otp(
     email = _normalize_email(otp_in.email)
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        if settings.supabase_configured:
-            # Auto-provision unverified user so Login-with-OTP works seamlessly
-            user = User(
-                email=email,
-                hashed_password="SUPABASE_AUTH_USER",
-                is_verified=False,
-                role="Researcher",
-                default_jurisdiction="INDIA"
-            )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-        else:
-            raise HTTPException(status_code=404, detail="No account associated with this email")
-
-    if settings.supabase_configured:
-        supabase_sent = await send_supabase_otp(user.email)
-        if supabase_sent:
-            return {"message": "Verification code sent to your email via Supabase.", "dev_otp": None}
+        # Auto-provision unverified user so Login-with-OTP works seamlessly
+        user = User(
+            email=email,
+            hashed_password=get_password_hash("OTP_LOGIN_USER"),
+            is_verified=False,
+            role="Researcher",
+            default_jurisdiction="INDIA"
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     dev_otp = _issue_otp(db, background_tasks, user.email)
-    return {"message": "OTP sent successfully", "dev_otp": dev_otp}
+    return {
+        "message": "Verification code sent to your email." if settings.mail_configured else "OTP sent successfully",
+        "dev_otp": dev_otp
+    }
 
 @router.post("/verify-otp", response_model=AuthResponse)
-async def verify_otp(otp_in: OTPVerify, db: Session = Depends(get_db)):
+def verify_otp(otp_in: OTPVerify, db: Session = Depends(get_db)):
     email = _normalize_email(otp_in.email)
     code = (otp_in.otp_code or "").strip()
 
-    is_verified = False
-    if settings.supabase_configured:
-        is_verified = await verify_supabase_otp(email, code)
+    # Newest matching code first, so a re-issued OTP supersedes older ones.
+    otp_record = db.query(OTPRecord).filter(
+        OTPRecord.email == email,
+        OTPRecord.otp_code == code
+    ).order_by(OTPRecord.id.desc()).first()
 
-    if not is_verified:
-        # Fallback to local OTPRecord table
-        otp_record = db.query(OTPRecord).filter(
-            OTPRecord.email == email,
-            OTPRecord.otp_code == code
-        ).order_by(OTPRecord.id.desc()).first()
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="Invalid OTP code")
 
-        if not otp_record:
-            raise HTTPException(status_code=400, detail="Invalid OTP code")
+    now = datetime.now(timezone.utc)
+    if otp_record.expires_at.tzinfo is None:
+        now = now.replace(tzinfo=None)
 
-        now = datetime.now(timezone.utc)
-        if otp_record.expires_at.tzinfo is None:
-            now = now.replace(tzinfo=None)
-
-        if now > otp_record.expires_at:
-            raise HTTPException(status_code=400, detail="OTP expired")
-
-        db.delete(otp_record)
-        db.commit()
+    if now > otp_record.expires_at:
+        raise HTTPException(status_code=400, detail="OTP expired")
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -242,9 +219,9 @@ async def verify_otp(otp_in: OTPVerify, db: Session = Depends(get_db)):
     # Mark user as verified
     if not user.is_verified:
         user.is_verified = True
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        
+    db.delete(otp_record)
+    db.commit()
     
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(

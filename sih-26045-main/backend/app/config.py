@@ -54,9 +54,9 @@ class Settings(BaseSettings):
     # doesn't silently expire and log the user out. Override via env if needed.
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
-    mail_username: str = os.getenv("MAIL_USERNAME", "")
-    mail_password: str = os.getenv("MAIL_PASSWORD", "")
-    mail_from: str = os.getenv("MAIL_FROM", "")
+    mail_username: str = os.getenv("MAIL_USERNAME", "ipsaktisahayak@gmail.com")
+    mail_password: str = os.getenv("MAIL_PASSWORD", "qdbjbnmmylpqdkum")
+    mail_from: str = os.getenv("MAIL_FROM", "ipsaktisahayak@gmail.com")
     mail_port: int = int(os.getenv("MAIL_PORT", "587"))
     mail_server: str = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     mail_starttls: bool = True

@@ -116,12 +116,30 @@ async def send_otp_email(email: EmailStr, otp: str):
         subtype=MessageType.html
     )
 
-    fm = FastMail(conf)
     try:
+        fm = FastMail(conf)
         await fm.send_message(message)
-        logger.info(f"OTP email sent to {email}")
+        logger.info(f"OTP email sent to {email} via FastMail")
+        return
     except Exception as e:
-        logger.error(f"Failed to send email to {email}: {e}")
-        # Dev fallback: surface the OTP in the backend log so sign-in still works
-        # if email delivery ever fails (e.g. a rejected Gmail app password).
-        logger.warning(f"[OTP FALLBACK] Email delivery failed — verification code for {email} is: {otp}")
+        logger.warning(f"FastMail failed ({e}), trying standard smtplib fallback...")
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "Your OTP Verification Code - IP-SAKTI Sahayak"
+            msg["From"] = settings.mail_from
+            msg["To"] = str(email)
+            msg.attach(MIMEText(html, "html"))
+
+            with smtplib.SMTP(settings.mail_server, settings.mail_port, timeout=15) as s:
+                s.starttls()
+                s.login(settings.mail_username, settings.mail_password)
+                s.send_message(msg)
+            logger.info(f"OTP email sent to {email} via standard smtplib")
+            return
+        except Exception as smtperr:
+            logger.error(f"Failed to send email to {email}: {smtperr}")
+            logger.warning(f"[OTP FALLBACK] Email delivery failed — verification code for {email} is: {otp}")
