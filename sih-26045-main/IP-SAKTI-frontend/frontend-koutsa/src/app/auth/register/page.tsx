@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,40 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    async function handleRedirectResult() {
+      try {
+        const { getRedirectResult } = await import("firebase/auth");
+        const { auth } = await import("@/lib/firebase");
+        const userCred = await getRedirectResult(auth);
+        if (userCred?.user && isMounted) {
+          setLoading(true);
+          const googleUser = userCred.user;
+          const names = (googleUser.displayName || "").split(" ");
+          const firstName = names[0] || "Researcher";
+          const lastName = names.slice(1).join(" ") || "";
+          const idToken = await googleUser.getIdToken();
+
+          const result = await authApi.googleLogin({
+            email: googleUser.email || "",
+            first_name: firstName,
+            last_name: lastName,
+            id_token: idToken
+          });
+          if (result.access_token) {
+            setSession(result.access_token, result.user);
+            router.push("/dashboard");
+          }
+        }
+      } catch (err) {
+        console.error("Google redirect handling error", err);
+      }
+    }
+    handleRedirectResult();
+    return () => { isMounted = false; };
+  }, [router, setSession]);
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setError("");
@@ -53,42 +87,14 @@ export default function RegisterPage() {
   async function handleGoogleSignIn() {
     setError(""); setLoading(true);
     try {
-      const { signInWithPopup, signInWithRedirect } = await import("firebase/auth");
+      const { signInWithRedirect } = await import("firebase/auth");
       const { auth, googleProvider } = await import("@/lib/firebase");
-      try {
-        const userCred = await signInWithPopup(auth, googleProvider);
-        const googleUser = userCred.user;
-        const names = (googleUser.displayName || "").split(" ");
-        const firstName = names[0] || "Researcher";
-        const lastName = names.slice(1).join(" ") || "";
-        const idToken = await googleUser.getIdToken();
-
-        const result = await authApi.googleLogin({
-          email: googleUser.email || "",
-          first_name: firstName,
-          last_name: lastName,
-          id_token: idToken
-        });
-
-        if (!result.access_token) throw new Error("Google authentication failed");
-        setSession(result.access_token, result.user);
-        router.push("/dashboard");
-      } catch (popupErr: any) {
-        if (popupErr?.code === "auth/popup-closed-by-user") {
-          setLoading(false);
-          return;
-        }
-        if (popupErr?.code === "auth/popup-blocked" || popupErr?.code === "auth/cancelled-popup-request") {
-          await signInWithRedirect(auth, googleProvider);
-          return;
-        }
-        throw popupErr;
-      }
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: any) {
       if (err?.code === "auth/unauthorized-domain") {
         setError("This domain is not authorized in Firebase Console. Add this domain under Authentication > Settings > Authorized Domains.");
       } else {
-        setError(getApiErrorMessage(err, "Could not sign in with Google. Check Firebase configuration."));
+        setError(getApiErrorMessage(err, "Could not redirect to Google sign-in."));
       }
       setLoading(false);
     }

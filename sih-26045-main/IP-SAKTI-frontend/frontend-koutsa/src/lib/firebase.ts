@@ -8,8 +8,7 @@ const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "ip-sakti-sahayak-22b24",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "ip-sakti-sahayak-22b24.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "210880167989",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:210880167989:web:a6f5810545778e2ba1f17c",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-Y93CWVQWE7"
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:210880167989:web:a6f5810545778e2ba1f17c"
 };
 
 // Initialize Firebase (singleton)
