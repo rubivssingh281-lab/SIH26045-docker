@@ -3,12 +3,13 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // Firebase configuration for project: ip-sakti-sahayak-22b24
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDummyKeyForBuild",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBkWKlgJ3R8HWLGyCTHR86durmEUaA5MXs",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "ip-sakti-sahayak-22b24.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "ip-sakti-sahayak-22b24",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "ip-sakti-sahayak-22b24.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "000000000000",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:000000000000:web:0000000000000000000000"
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "210880167989",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:210880167989:web:bc65cdb2b0bf612aa1f17c",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-QRY5NLRQKR"
 };
 
 // Initialize Firebase (singleton)
