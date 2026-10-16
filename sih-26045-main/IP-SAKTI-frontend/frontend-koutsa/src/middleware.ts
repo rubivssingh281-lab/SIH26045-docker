@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/auth/login", "/auth/register", "/auth/verify"];
+const PUBLIC_PATHS = ["/auth/login", "/auth/register", "/auth/verify", "/auth/forgot-password"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("ip_sakti_session")?.value;
 
   if (isPublic) {
-    if (token && pathname.startsWith("/auth/login")) return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (token && (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/forgot-password"))) return NextResponse.redirect(new URL("/dashboard", request.url));
     return NextResponse.next();
   }
 
@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/cases/:path*", "/profile/:path*", "/auth/login", "/auth/register", "/auth/verify"]
+  matcher: ["/dashboard/:path*", "/cases/:path*", "/profile/:path*", "/auth/login", "/auth/register", "/auth/verify", "/auth/forgot-password"]
 };

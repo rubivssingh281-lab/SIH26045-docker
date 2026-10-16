@@ -7,7 +7,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import User, OTPRecord
-from app.schemas import UserCreate, UserResponse, OTPVerify, OTPGenerate, Token, AuthResponse, UserLogin, UserUpdate
+from app.schemas import (
+    UserCreate, UserResponse, OTPVerify, OTPGenerate, Token, AuthResponse,
+    UserLogin, UserUpdate, PasswordResetRequest, PasswordResetConfirm
+)
 from app.utils.security import get_password_hash, verify_password, create_access_token, generate_otp
 from app.utils.email import send_otp_email
 from app.config import settings
@@ -48,28 +51,58 @@ async def send_supabase_otp(email: str) -> bool:
         return False
 
 
-async def verify_supabase_otp(email: str, token: str) -> bool:
+async def verify_supabase_otp(email: str, token: str, otp_type: str = "email") -> bool:
     """Verify 6-digit code against Supabase Auth service."""
+    if not settings.supabase_configured:
+        return False
+    types_to_try = [otp_type]
+    fallback_type = "recovery" if otp_type == "email" else "email"
+    if fallback_type not in types_to_try:
+        types_to_try.append(fallback_type)
+
+    for t in types_to_try:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{settings.supabase_url.rstrip('/')}/auth/v1/verify",
+                    headers={
+                        "apikey": settings.supabase_anon_key,
+                        "Content-Type": "application/json"
+                    },
+                    json={"type": t, "email": email, "token": token}
+                )
+                if resp.status_code == 200:
+                    logger.info(f"Supabase Auth OTP code verified for {email} (type={t})")
+                    return True
+                else:
+                    logger.warning(f"Supabase Auth OTP verify ({t}) failed ({resp.status_code}): {resp.text}")
+        except Exception as exc:
+            logger.error(f"Error calling Supabase Auth verify ({t}): {exc}")
+    return False
+
+
+async def send_supabase_password_reset(email: str) -> bool:
+    """Trigger Supabase Auth to send the Reset Password email template."""
     if not settings.supabase_configured:
         return False
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
-                f"{settings.supabase_url.rstrip('/')}/auth/v1/verify",
+                f"{settings.supabase_url.rstrip('/')}/auth/v1/recover",
                 headers={
                     "apikey": settings.supabase_anon_key,
                     "Content-Type": "application/json"
                 },
-                json={"type": "email", "email": email, "token": token}
+                json={"email": email}
             )
             if resp.status_code == 200:
-                logger.info(f"Supabase Auth OTP code verified for {email}")
+                logger.info(f"Supabase Auth password reset dispatched to {email}")
                 return True
             else:
-                logger.warning(f"Supabase Auth OTP verify failed ({resp.status_code}): {resp.text}")
+                logger.warning(f"Supabase Auth recover failed ({resp.status_code}): {resp.text}")
                 return False
     except Exception as exc:
-        logger.error(f"Error calling Supabase Auth verify: {exc}")
+        logger.error(f"Error calling Supabase Auth recover: {exc}")
         return False
 
 
@@ -260,5 +293,79 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    payload: PasswordResetRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    email = _normalize_email(payload.email)
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="No account associated with this email address")
+
+    if settings.supabase_configured:
+        sent = await send_supabase_password_reset(user.email)
+        if not sent:
+            logger.info(f"Supabase recover failed, dispatching fallback send_supabase_otp for {user.email}")
+            await send_supabase_otp(user.email)
+
+    dev_otp = _issue_otp(db, background_tasks, user.email)
+    return {
+        "message": "Password reset code sent to your email.",
+        "dev_otp": None if settings.mail_configured else dev_otp
+    }
+
+
+@router.post("/reset-password", response_model=AuthResponse)
+async def reset_password(payload: PasswordResetConfirm, db: Session = Depends(get_db)):
+    email = _normalize_email(payload.email)
+    code = (payload.otp_code or "").strip()
+    new_pwd = (payload.new_password or "").strip()
+
+    if len(new_pwd) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+
+    is_verified = False
+    if settings.supabase_configured:
+        is_verified = await verify_supabase_otp(email, code, otp_type="recovery")
+
+    if not is_verified:
+        otp_record = db.query(OTPRecord).filter(
+            OTPRecord.email == email,
+            OTPRecord.otp_code == code
+        ).order_by(OTPRecord.id.desc()).first()
+
+        if not otp_record:
+            raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+
+        now = datetime.now(timezone.utc)
+        if otp_record.expires_at.tzinfo is None:
+            now = now.replace(tzinfo=None)
+
+        if now > otp_record.expires_at:
+            raise HTTPException(status_code=400, detail="Verification code has expired")
+
+        db.delete(otp_record)
+        db.commit()
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.hashed_password = get_password_hash(new_pwd)
+    user.is_verified = True
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
+
 
 

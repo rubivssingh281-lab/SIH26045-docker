@@ -121,6 +121,32 @@ export const authApi = {
     }
     const { data } = await api.patch<AuthUser>("/auth/me", payload);
     return data;
+  },
+  async forgotPassword(email: string): Promise<{ message: string; dev_otp?: string | null }> {
+    if (useMock) {
+      return mockDelay({ message: "Password reset code sent to your email" });
+    }
+    const { data } = await api.post<{ message: string; dev_otp?: string | null }>("/auth/forgot-password", {
+      email: email.trim().toLowerCase()
+    });
+    return data;
+  },
+  async resetPassword(payload: { email: string; otp_code: string; new_password: string }): Promise<AuthResponse> {
+    if (useMock) {
+      const user = mockUsers.find(item => item.email === payload.email) ?? mockUsers[0];
+      return mockDelay({
+        access_token: makeMockToken(user.email),
+        token_type: "bearer",
+        user,
+        message: "Password reset successfully"
+      });
+    }
+    const { data } = await api.post<AuthResponse>("/auth/reset-password", {
+      email: payload.email.trim().toLowerCase(),
+      otp_code: payload.otp_code.trim(),
+      new_password: payload.new_password
+    });
+    return data;
   }
 };
 

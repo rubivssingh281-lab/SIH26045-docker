@@ -24,6 +24,14 @@ class UserLogin(BaseModel):
     email: str = Field(..., description="User's email address")
     password: str = Field(..., description="User's password")
 
+class PasswordResetRequest(BaseModel):
+    email: str = Field(..., description="User's email address")
+
+class PasswordResetConfirm(BaseModel):
+    email: str = Field(..., description="User's email address")
+    otp_code: str = Field(..., description="The 6-digit OTP code received via email")
+    new_password: str = Field(..., description="The new password (at least 6 characters)")
+
 class Token(BaseModel):
     access_token: str
     token_type: str
