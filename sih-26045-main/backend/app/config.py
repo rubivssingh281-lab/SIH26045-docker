@@ -66,6 +66,14 @@ class Settings(BaseSettings):
     def mail_configured(self) -> bool:
         return bool(self.mail_username and self.mail_password and self.mail_from)
 
+    # Supabase Auth & OTP delivery
+    supabase_url: str = os.getenv("SUPABASE_URL", "https://khywjiwqnqmoayuzhnxz.supabase.co")
+    supabase_anon_key: str = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoeXdqaXdxbnFtb2F5dXpobnh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNjk3OTcsImV4cCI6MjEwNzc0NTc5N30.sTsNtuVDejSaSD5hdu2T7Ws-TqVRhZu8_HGAs-4tevU")
+
+    @property
+    def supabase_configured(self) -> bool:
+        return bool(self.supabase_url and self.supabase_anon_key)
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
