@@ -140,15 +140,44 @@ Render free services put apps to sleep after 15 minutes of inactivity. To keep i
 4. Click **Create Monitor**.
 Now UptimeRobot pings your `/health` endpoint every 10 minutes. Your backend **never sleeps**, stays warm, and gives instantaneous responses to anyone who opens your link anytime during the 28 days!
 
-#### 2. Keep User Accounts & Case History Safe (Free Cloud Database)
-On free cloud containers, local SQLite disk is ephemeral and can wipe on redeploys. To make sure all created users, login sessions, and case history persist safely across all 28 days:
-1. Go to [Neon.tech](https://neon.tech/) (100% free serverless PostgreSQL, no credit card required).
-2. Create a free project called `ipsakti`.
-3. Copy the Postgres connection string:
-   `postgresql://user:password@ep-xyz.aws.neon.tech/neondb?sslmode=require`
-4. In your **Render Dashboard** environment variables, set:
-   - `DATABASE_URL`: paste your Neon connection string.
-Your backend automatically creates the tables, and all data is preserved permanently for all 28 days.
+#### 2. Keep User Accounts & Case History Safe with Supabase (Free Cloud Database)
+On free cloud containers, local SQLite disk is ephemeral and wipes on restarts/redeploys. To make sure all created users, authentication states, and case history persist permanently in **Supabase**:
+
+##### Step A: Create Your Free Supabase Project
+1. Go to [database.new](https://database.new) (or [supabase.com](https://supabase.com)) and sign in.
+2. Click **New Project**:
+   - **Name:** `ip-sakti-db`
+   - **Database Password:** Enter a secure password (make note of it!).
+   - **Region:** Choose a region close to your Render deployment (e.g. Frankfurt, Singapore, or US East).
+3. Click **Create new project** (takes ~1 minute to spin up).
+
+##### Step B: Get the IPv4-Compatible Connection String
+> ⚠️ **Crucial for Render:** Free Render services communicate over IPv4 only. Supabase direct connections (`db.xxx.supabase.co`) use IPv6 on newer projects. You **must** use the **Connection Pooler** URI which supports IPv4.
+
+1. In Supabase Dashboard, click the green **Connect** button at the top header (or navigate to **Project Settings** ➔ **Database**).
+2. Under **Connection String**, select the **URI** tab.
+3. Set the mode dropdown to **Session** (Port `5432`).
+4. Copy the connection string. It will look like:
+   ```text
+   postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
+   ```
+5. Replace `[YOUR-PASSWORD]` with your real database password. *(Note: If your password has special characters like `@`, `#`, or `$`, URL-encode them — e.g. `@` becomes `%40`)*.
+
+##### Step C: Add DATABASE_URL in Render Dashboard
+1. Go to [dashboard.render.com](https://dashboard.render.com) and open your backend service (`ip-sakti-backend`).
+2. Go to **Environment** tab.
+3. Click **Add Environment Variable**:
+   - **Key:** `DATABASE_URL`
+   - **Value:** Paste your Supabase URI from Step B.
+4. Click **Save Changes**. Render will automatically redeploy.
+5. On boot, FastAPI runs `Base.metadata.create_all()`, automatically creating the `users`, `otp_records`, `formulation_submissions`, and `extracted_facts` tables directly in Supabase!
+
+##### Step D: Verify with Vercel Frontend
+1. Open your Vercel public URL (`https://your-app.vercel.app`).
+2. Go to **Sign Up** (`/auth/register`) and register a new user account.
+3. Verify the OTP code.
+4. Switch to your Supabase Dashboard ➔ **Table Editor** ➔ click `users` table: you will see your new account with `is_verified: true` stored safely in Supabase PostgreSQL!
+5. All future sign-ins, session checks, and patent formulation cases will automatically synchronize with Supabase.
 
 ---
 
