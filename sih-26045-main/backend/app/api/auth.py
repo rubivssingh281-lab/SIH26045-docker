@@ -9,7 +9,7 @@ from app.db import get_db
 from app.models import User, OTPRecord
 from app.schemas import (
     UserCreate, UserResponse, OTPVerify, OTPGenerate, Token, AuthResponse,
-    UserLogin, UserUpdate, PasswordResetRequest, PasswordResetConfirm
+    UserLogin, UserUpdate, PasswordResetRequest, PasswordResetConfirm, GoogleLoginRequest
 )
 from app.utils.security import get_password_hash, verify_password, create_access_token, generate_otp
 from app.utils.email import send_otp_email
@@ -366,6 +366,45 @@ async def reset_password(payload: PasswordResetConfirm, db: Session = Depends(ge
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer", "user": user}
+
+
+@router.post("/google", response_model=AuthResponse)
+def google_auth(payload: GoogleLoginRequest, db: Session = Depends(get_db)):
+    """Authenticate or auto-provision user using verified Firebase Google Sign-In."""
+    email = _normalize_email(payload.email)
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email from Google account")
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        user = User(
+            email=email,
+            hashed_password=get_password_hash("GOOGLE_FIREBASE_OAUTH_USER"),
+            first_name=payload.first_name,
+            last_name=payload.last_name,
+            is_verified=True,
+            role="Researcher",
+            default_jurisdiction="INDIA"
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    else:
+        if not user.is_verified:
+            user.is_verified = True
+        if payload.first_name and not user.first_name:
+            user.first_name = payload.first_name
+        if payload.last_name and not user.last_name:
+            user.last_name = payload.last_name
+        db.commit()
+        db.refresh(user)
+
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
+
 
 
 

@@ -147,6 +147,26 @@ export const authApi = {
       new_password: payload.new_password
     });
     return data;
+  },
+  async googleLogin(payload: { email: string; first_name?: string; last_name?: string; id_token?: string }): Promise<AuthResponse> {
+    if (useMock) {
+      const user = {
+        id: `u-${Date.now()}`,
+        email: payload.email,
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        role: "Researcher" as const,
+        default_jurisdiction: "INDIA" as const
+      };
+      return mockDelay({ access_token: makeMockToken(user.email), token_type: "bearer", user, message: "Signed in with Google" });
+    }
+    const { data } = await api.post<AuthResponse>("/auth/google", {
+      email: payload.email.trim().toLowerCase(),
+      first_name: payload.first_name,
+      last_name: payload.last_name,
+      id_token: payload.id_token
+    });
+    return data;
   }
 };
 

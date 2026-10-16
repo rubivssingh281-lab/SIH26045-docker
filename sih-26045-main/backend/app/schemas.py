@@ -32,6 +32,12 @@ class PasswordResetConfirm(BaseModel):
     otp_code: str = Field(..., description="The 6-digit OTP code received via email")
     new_password: str = Field(..., description="The new password (at least 6 characters)")
 
+class GoogleLoginRequest(BaseModel):
+    email: str = Field(..., description="Google account email")
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    id_token: Optional[str] = None
+
 class Token(BaseModel):
     access_token: str
     token_type: str
