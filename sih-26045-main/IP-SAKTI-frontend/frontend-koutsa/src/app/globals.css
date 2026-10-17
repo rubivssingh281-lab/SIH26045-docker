@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Ol+Chiki:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -23,7 +23,7 @@ body {
   min-height: 100dvh;
   background: var(--canvas);
   color: var(--ink);
-  font-family: "Manrope", Arial, sans-serif;
+  font-family: "Manrope", "Noto Sans Ol Chiki", Arial, sans-serif;
 }
 
 button, input, textarea, select { font: inherit; }
@@ -34,7 +34,7 @@ button, input, textarea, select { font: inherit; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5df; border-radius: 999px; }
 
-.serif { font-family: "DM Serif Display", Georgia, serif; }
+.serif { font-family: "DM Serif Display", "Noto Sans Ol Chiki", Georgia, serif; }
 
 .botanical {
   position: relative;

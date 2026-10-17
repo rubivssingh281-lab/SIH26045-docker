@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { GraphData, GraphNode } from "@/types";
+import { useLanguage } from "@/components/providers/language-provider";
 import { cn } from "@/lib/utils";
 
 const TYPE_COLOR: Record<string, string> = {
@@ -19,6 +20,7 @@ function colorFor(type: string) {
 }
 
 export function KnowledgeGraphView({ data, height = 520 }: { data: GraphData; height?: number }) {
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [hover, setHover] = useState<string | null>(null);
 
@@ -57,7 +59,7 @@ export function KnowledgeGraphView({ data, height = 520 }: { data: GraphData; he
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
       <div className="overflow-x-auto rounded-card border border-line bg-[#FBFCFE]">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 560 }} role="img" aria-label="Knowledge graph">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 560 }} role="img" aria-label={t("reasoning.graph", "Knowledge graph")}>
           {edges.map((e, i) => {
             const a = positioned.get(e.source)!;
             const b = positioned.get(e.target)!;
@@ -75,12 +77,12 @@ export function KnowledgeGraphView({ data, height = 520 }: { data: GraphData; he
               <g key={node.id} className="cursor-pointer" opacity={active ? 1 : 0.3}
                 onMouseEnter={() => setHover(node.id)} onMouseLeave={() => setHover(null)}
                 onClick={() => setSelected(node)}>
-                <title>{`${node.label} — ${node.citation || node.type}`}</title>
+                <title>{`${t(node.label)} — ${node.citation ? t(node.citation) : t(node.type)}`}</title>
                 <circle cx={x} cy={y} r={selected?.id === node.id ? 9 : 6} fill={colorFor(node.type)}
                   stroke="#fff" strokeWidth={1.5} />
                 <text x={right ? x + 10 : x - 10} y={y + 3} textAnchor={right ? "start" : "end"}
                   className="fill-ink" style={{ fontSize: 10, fontWeight: 600 }}>
-                  {node.label.length > 26 ? node.label.slice(0, 25) + "…" : node.label}
+                  {t(node.label).length > 26 ? t(node.label).slice(0, 25) + "…" : t(node.label)}
                 </text>
               </g>
             );
@@ -90,28 +92,28 @@ export function KnowledgeGraphView({ data, height = 520 }: { data: GraphData; he
 
       <div className="space-y-4">
         <div className="rounded-card border border-line bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">Legend</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("graph.legend", "Legend")}</p>
           <ul className="mt-2 space-y-1.5">
-            {types.map(t => (
-              <li key={t} className="flex items-center gap-2 text-xs text-ink/70">
-                <span className="inline-block h-3 w-3 rounded-full" style={{ background: colorFor(t) }} /> {t}
+            {types.map(tType => (
+              <li key={tType} className="flex items-center gap-2 text-xs text-ink/70">
+                <span className="inline-block h-3 w-3 rounded-full" style={{ background: colorFor(tType) }} /> {t(tType)}
               </li>
             ))}
           </ul>
         </div>
 
         <div className="rounded-card border border-line bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">Node details</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("graph.node_details", "Node details")}</p>
           {selected ? (
             <div className="mt-2">
-              <p className="text-sm font-bold text-navy">{selected.label}</p>
-              <span className="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: colorFor(selected.type) }}>{selected.type}</span>
-              {selected.summary && <p className="mt-2 text-xs leading-5 text-ink/70">{selected.summary}</p>}
-              {selected.citation && <p className="mt-2 text-xs text-ink/55"><span className="font-semibold">Source:</span> {selected.citation}</p>}
-              {selected.url?.startsWith("http") && <a href={selected.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-bold text-gold hover:underline">Open official source</a>}
+              <p className="text-sm font-bold text-navy">{t(selected.label)}</p>
+              <span className="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: colorFor(selected.type) }}>{t(selected.type)}</span>
+              {selected.summary && <p className="mt-2 text-xs leading-5 text-ink/70">{t(selected.summary)}</p>}
+              {selected.citation && <p className="mt-2 text-xs text-ink/55"><span className="font-semibold">{t("graph.source", "Source")}:</span> {t(selected.citation)}</p>}
+              {selected.url?.startsWith("http") && <a href={selected.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs font-bold text-gold hover:underline">{t("graph.open_official", "Open official source")}</a>}
             </div>
           ) : (
-            <p className="mt-2 text-xs text-ink/50">Hover to highlight links; click a node to see its source citation.</p>
+            <p className="mt-2 text-xs text-ink/50">{t("graph.hover_hint", "Hover to highlight links; click a node to see its source citation.")}</p>
           )}
         </div>
       </div>

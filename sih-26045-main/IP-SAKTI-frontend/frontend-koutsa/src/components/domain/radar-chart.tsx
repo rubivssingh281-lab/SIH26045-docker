@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export interface RadarSeries {
   label: string;
@@ -25,6 +26,7 @@ export function RadarChart({
   size = 380,
   showValues = true,
 }: RadarChartProps) {
+  const { t } = useLanguage();
   const pad = 74;
   const W = size + pad * 2;
   const H = size + pad * 2;
@@ -52,10 +54,10 @@ export function RadarChart({
   return (
     <div className="w-full">
       <div className="overflow-x-auto">
-        <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto w-full" style={{ maxWidth: W }} role="img" aria-label="Coverage radar chart">
+        <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto w-full" style={{ maxWidth: W }} role="img" aria-label={t("reasoning.coverage", "Coverage radar chart")}>
           {/* concentric grid rings */}
-          {ticks.map((t, i) => (
-            <polygon key={i} points={ringPoints(t)} fill={i === ticks.length - 1 ? "#F8FAFC" : "none"}
+          {ticks.map((tVal, i) => (
+            <polygon key={i} points={ringPoints(tVal)} fill={i === ticks.length - 1 ? "#F8FAFC" : "none"}
               stroke="#D9E1EC" strokeWidth={0.8} />
           ))}
           {/* spokes + axis labels */}
@@ -64,11 +66,11 @@ export function RadarChart({
             const lbl = geom.point(i, max * 1.16);
             const anchor = Math.abs(Math.cos(geom.angleFor(i))) < 0.3 ? "middle" : (Math.cos(geom.angleFor(i)) > 0 ? "start" : "end");
             return (
-              <g key={axis}>
-                <line x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="#D9E1EC" strokeWidth={0.8} />
-                <text x={lbl.x} y={lbl.y} textAnchor={anchor} dominantBaseline="middle"
-                  className="fill-navy" style={{ fontSize: 12, fontWeight: 700 }}>{axis}</text>
-              </g>
+               <g key={axis}>
+                 <line x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="#D9E1EC" strokeWidth={0.8} />
+                 <text x={lbl.x} y={lbl.y} textAnchor={anchor} dominantBaseline="middle"
+                   className="fill-navy" style={{ fontSize: 12, fontWeight: 700 }}>{t(axis)}</text>
+               </g>
             );
           })}
           {/* radial tick value labels along the top spoke */}

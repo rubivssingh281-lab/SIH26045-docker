@@ -26,7 +26,7 @@ function pickVoice(langCode: string): SpeechSynthesisVoice | null {
 }
 
 export function TextToSpeech({ text, className }: TextToSpeechProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -90,7 +90,7 @@ export function TextToSpeech({ text, className }: TextToSpeechProps) {
         (isPlaying || isLoading) && "bg-slate-100 border-navy text-navy",
         className
       )}
-      title={isPlaying ? "Stop reading" : isLoading ? "Preparing audio…" : "Read aloud"}
+      title={isPlaying ? t("tts.stop_reading", "Stop reading") : isLoading ? t("tts.preparing_audio", "Preparing audio…") : t("tts.read_aloud", "Read aloud")}
     >
       {isLoading ? (
         <Loader2 size={14} className="animate-spin" />
@@ -99,7 +99,7 @@ export function TextToSpeech({ text, className }: TextToSpeechProps) {
       ) : (
         <Volume2 size={14} />
       )}
-      <span className="sr-only">{isPlaying ? "Stop reading" : "Read aloud"}</span>
+      <span className="sr-only">{isPlaying ? t("tts.stop_reading", "Stop reading") : t("tts.read_aloud", "Read aloud")}</span>
     </button>
   );
 }

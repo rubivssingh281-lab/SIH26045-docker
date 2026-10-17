@@ -1,8 +1,11 @@
+"use client";
+
 import { Check, CircleAlert, CircleDot, Clock3 } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
 import type { ExplainabilityTrace } from "@/types";
 import { Card } from "@/components/ui/card";
 import { TextToSpeech } from "@/components/ui/text-to-speech";
+import { useLanguage } from "@/components/providers/language-provider";
 
 // Inline **bold** rendering.
 function inline(text: string, key: string) {
@@ -50,11 +53,12 @@ function renderDetails(text: string) {
 }
 
 export function ExplainabilityStepper({ trace }: { trace: ExplainabilityTrace }) {
+  const { t } = useLanguage();
   return (
     <Card className="p-6">
       <div className="mb-7">
-        <p className="eyebrow">Trace</p>
-        <h2 className="serif mt-1 text-3xl">How the assessment was formed</h2>
+        <p className="eyebrow">{t("explain.trace_title", "Trace")}</p>
+        <h2 className="serif mt-1 text-3xl">{t("explain.trace_heading", "How the assessment was formed")}</h2>
       </div>
       <div className="space-y-0">
         {trace.steps.map((step, index) => {

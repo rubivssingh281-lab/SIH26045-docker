@@ -73,7 +73,7 @@ function renderAnswer(text: string, citations: GroundedAnswer["citations"]) {
 }
 
 export function GroundedAnswer({ result, compact = false }: { result: GroundedAnswer; compact?: boolean }) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [answer, setAnswer] = useState(result.answer);
   useEffect(() => {
     let active = true;
@@ -88,7 +88,7 @@ export function GroundedAnswer({ result, compact = false }: { result: GroundedAn
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-forest/10 text-forest"><Bot size={18} /></div>
-              <div><p className="eyebrow">Sahayak answer</p><p className="text-xs text-ink/55">Grounded research response</p></div>
+              <div><p className="eyebrow">{t("grounded.sahayak_answer", "Sahayak answer")}</p><p className="text-xs text-ink/55">{t("grounded.grounded_response", "Grounded research response")}</p></div>
             </div>
           </div>
           <div className="mt-5 text-[15px] leading-7 text-ink/80">{renderAnswer(answer, result.citations)}</div>
@@ -97,13 +97,13 @@ export function GroundedAnswer({ result, compact = false }: { result: GroundedAn
 
       {result.citations && result.citations.length > 0 && (
       <Card className="p-6">
-        <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Sources</p><h3 className="serif mt-1 text-2xl text-forest">Evidence cited in this answer</h3></div><CheckCircle2 className="text-emerald" size={20} /></div>
+        <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">{t("grounded.sources", "Sources")}</p><h3 className="serif mt-1 text-2xl text-forest">{t("grounded.evidence_cited", "Evidence cited in this answer")}</h3></div><CheckCircle2 className="text-emerald" size={20} /></div>
         <div className="mt-5 space-y-3">
           {result.citations.map((citation, index) => (
             <div key={`${citation.title}-${index}`} className="rounded-lg border border-line p-4">
-              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">[{index + 1}] {citation.title}</p><p className="mt-1 text-xs text-ink/55">{citation.citation}</p></div>{citation.validated && <Badge tone="success">Validated</Badge>}</div>
+              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">[{index + 1}] {citation.title}</p><p className="mt-1 text-xs text-ink/55">{citation.citation}</p></div>{citation.validated && <Badge tone="success">{t("grounded.validated", "Validated")}</Badge>}</div>
               <p className="mt-2 text-sm leading-6 text-ink/70">{citation.excerpt}</p>
-              {citation.source_url && <a href={citation.source_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-emerald hover:underline">Open source <ExternalLink size={12} /></a>}
+              {citation.source_url && <a href={citation.source_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-emerald hover:underline">{t("grounded.open_source", "Open source")} <ExternalLink size={12} /></a>}
             </div>
           ))}
         </div>

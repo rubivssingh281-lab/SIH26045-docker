@@ -12,25 +12,56 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { Disclaimer } from "@/components/domain/disclaimer";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export default function CaseHistoryPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const { data: caseItem, isLoading: caseLoading } = useCase(id);
   const { data: history, isLoading: historyLoading, isError } = useCaseHistory(id);
 
   useEffect(() => {
-    if (isError) toast.error("Case history could not be loaded", { description: "Please return to the case and try again." });
-  }, [isError]);
+    if (isError) toast.error(t("history.error_history", "Case history could not be loaded"), { 
+      description: t("history.error_history_desc", "Please return to the case and try again.") 
+    });
+  }, [isError, t]);
 
   if (caseLoading) return <div className="space-y-5"><Skeleton className="h-6 w-40"/><Skeleton className="h-16 w-2/3"/><Skeleton className="h-[520px]"/></div>;
-  if (!caseItem) return <Card className="p-8">This case could not be found.</Card>;
+  if (!caseItem) return <Card className="p-8">{t("explain.error_trace", "This case could not be found.")}</Card>;
 
   return (
     <div>
-      <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }, { label: caseItem.title, href: `/cases/${id}` }, { label: "History" }]} />
-      <PageHeader title="Case history" description="Review the audit trail of this research case, including when facts changed, who made the change, and when analyses were run." action={<div className="flex flex-wrap gap-2"><Link href={`/cases/${id}`}><Button variant="secondary"><ArrowLeft size={16}/> Back to analysis</Button></Link><Link href={`/cases/${id}/report`}><Button variant="secondary"><FileText size={16}/> Case report</Button></Link></div>} />
-      {historyLoading ? <Skeleton className="h-[560px]" /> : isError ? <Card className="p-8 text-center"><p className="font-bold">We couldn't load the case history.</p><p className="mt-1 text-sm text-ink/60">Please try again from the case report.</p></Card> : <CaseHistoryTimeline events={history ?? []} />}
+      <Breadcrumb items={[
+        { label: t("nav.dashboard", "Dashboard"), href: "/dashboard" }, 
+        { label: caseItem.title, href: `/cases/${id}` }, 
+        { label: t("case_view.history", "History") }
+      ]} />
+      <PageHeader 
+        title={t("history.title", "Case history")} 
+        description={t("history.description", "Review the audit trail of this research case, including when facts changed, who made the change, and when analyses were run.")} 
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/cases/${id}`}>
+              <Button variant="secondary"><ArrowLeft size={16}/> {t("history.back_to_analysis", "Back to analysis")}</Button>
+            </Link>
+            <Link href={`/cases/${id}/report`}>
+              <Button variant="secondary"><FileText size={16}/> {t("history.case_report", "Case report")}</Button>
+            </Link>
+          </div>
+        } 
+      />
+      {historyLoading ? (
+        <Skeleton className="h-[560px]" />
+      ) : isError ? (
+        <Card className="p-8 text-center">
+          <p className="font-bold">{t("history.error_history", "We couldn't load the case history.")}</p>
+          <p className="mt-1 text-sm text-ink/60">{t("history.error_history_desc", "Please try again from the case report.")}</p>
+        </Card>
+      ) : (
+        <CaseHistoryTimeline events={history ?? []} />
+      )}
       <div className="mt-5"><Disclaimer /></div>
     </div>
   );
 }
+

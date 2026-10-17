@@ -1,11 +1,14 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/language-provider";
 
-export function ShareCaseButton({ label = "Share" }: { label?: string }) {
+export function ShareCaseButton({ label }: { label?: string }) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const displayLabel = label ?? t("case_view.share", "Share");
 
   async function handleShare() {
     const url = window.location.href;
@@ -19,9 +22,9 @@ export function ShareCaseButton({ label = "Share" }: { label?: string }) {
   }
 
   return (
-    <Button variant="secondary" onClick={handleShare} title="Copy or share this case link">
+    <Button variant="secondary" onClick={handleShare} title={t("case_view.share", "Share")}>
       {copied ? <Check size={16} /> : <Copy size={16} />}
-      {copied ? "Link copied" : label}
+      {copied ? t("case_view.link_copied", "Link copied") : displayLabel}
     </Button>
   );
 }

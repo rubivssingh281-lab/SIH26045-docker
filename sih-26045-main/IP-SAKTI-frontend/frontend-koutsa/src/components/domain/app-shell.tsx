@@ -171,27 +171,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {preferencesOpen && (
         <div className="fixed bottom-6 left-6 z-[60] w-[320px] rounded-card border border-line bg-white p-5 shadow-xl lg:left-[300px]">
           <div className="flex items-start justify-between gap-4">
-            <div><p className="eyebrow">Workspace</p><h2 className="serif mt-1 text-2xl text-forest">Research preferences</h2></div>
+            <div><p className="eyebrow">{t("common.workspace", "Workspace")}</p><h2 className="serif mt-1 text-2xl text-forest">{t("common.research_preferences", "Research preferences")}</h2></div>
             <button onClick={() => setPreferencesOpen(false)} className="rounded-lg p-1.5 hover:bg-mist" aria-label="Close preferences"><X size={17}/></button>
           </div>
-          <p className="mt-3 text-xs leading-5 text-ink/60">Your jurisdiction preference is reused when starting a new research case. It does not replace the case-level jurisdiction control.</p>
+          <p className="mt-3 text-xs leading-5 text-ink/60">{t("common.preferences_dialog_desc", "Your jurisdiction preference is reused when starting a new research case. It does not replace the case-level jurisdiction control.")}</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             {(["INDIA"] as Jurisdiction[]).map(item => (
-              <button key={item} onClick={() => saveJurisdiction(item)} className={cn("rounded-control border px-3 py-2.5 text-xs font-bold", jurisdiction === item ? "border-forest bg-forest text-white" : "border-line bg-white text-navy")}>{item === "INDIA" ? "India" : "International"}</button>
+              <button key={item} onClick={() => saveJurisdiction(item)} className={cn("rounded-control border px-3 py-2.5 text-xs font-bold", jurisdiction === item ? "border-forest bg-forest text-white" : "border-line bg-white text-navy")}>{item === "INDIA" ? t("common.india", "India") : t("common.international", "International")}</button>
             ))}
           </div>
         </div>
       )}
 
       <div className={contentPad}>
-        <header className="sticky top-0 z-30 flex min-h-[69px] items-center gap-3 border-b border-[#CCD4D0] bg-[#EEF5FF]/95 px-4 backdrop-blur md:px-7">
+        <header className="sticky top-0 z-30 flex min-h-[69px] items-center gap-3 border-b border-[#CCD4D0] bg-[#EEF5FF]/95 px-[15px] backdrop-blur">
           <button className="rounded-lg p-2 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={21} /></button>
           <button className="hidden rounded-lg p-2 text-ink hover:bg-white lg:block" onClick={() => setCollapsed(v => !v)} aria-label="Toggle sidebar"><PanelLeftClose size={19} /></button>
           <div className="serif hidden text-[26px] text-forest md:block">IP-SAKTI Sahayak</div>
           <div className="hidden h-full items-center gap-1 md:flex" role="group" aria-label="Global jurisdiction preference">
             {(["INDIA"] as Jurisdiction[]).map(item => (
               <button key={item} type="button" onClick={() => saveJurisdiction(item)} className={cn("rounded-lg px-3 py-2 text-sm font-semibold", jurisdiction === item ? "bg-white text-forest shadow-sm" : "text-ink/55 hover:bg-white/70")}>
-                {item === "INDIA" ? "India" : "International"}
+                {item === "INDIA" ? t("common.india", "India") : t("common.international", "International")}
               </button>
             ))}
           </div>
@@ -220,7 +220,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <Search size={13} className="text-ink/40 shrink-0" />
                       <input
                         type="text"
-                        placeholder="Search 39 languages..."
+                        placeholder={t("common.search_languages", "Search 39 languages...")}
                         value={langQuery}
                         onChange={e => setLangQuery(e.target.value)}
                         className="w-full bg-transparent border-0 outline-none text-xs text-ink placeholder:text-ink/40"
@@ -236,16 +236,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     );
 
                     if (filtered.length === 0) {
-                      return <div className="p-4 text-center text-xs text-ink/45">No languages match &ldquo;{langQuery}&rdquo;</div>;
+                      return <div className="p-4 text-center text-xs text-ink/45">{t("common.no_languages_match", "No languages match")} &ldquo;{langQuery}&rdquo;</div>;
                     }
 
                     return (["Scheduled Languages", "Additional Indian Languages", "International"] as const).map(region => {
                       const list = filtered.filter(l => l.region === region);
                       if (list.length === 0) return null;
+                      const localizedRegion = region === "Scheduled Languages" ? t("common.scheduled_languages", "Scheduled Languages") : region === "Additional Indian Languages" ? t("common.additional_languages", "Additional Indian Languages") : t("common.international_languages", "International");
                       return (
                         <div key={region} className="py-1">
                           <p className="px-3.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-ink/40">
-                            {region} ({list.length})
+                            {localizedRegion} ({list.length})
                           </p>
                           {list.map(opt => (
                             <button
@@ -257,7 +258,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                               )}
                             >
                               <span className="truncate">{opt.native}</span>
-                              <span className="text-xs text-ink/45 shrink-0">{opt.name}</span>
+                              <span className="text-xs text-ink/45 shrink-0">{t(opt.name)}</span>
                             </button>
                           ))}
                         </div>
@@ -293,10 +294,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="serif text-[22px] font-bold text-forest leading-tight">
-                          {user?.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : "Researcher"}
+                          {user?.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : t("common.research_preferences", "Researcher")}
                         </h3>
                         <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-navy/70">
-                          <ShieldCheck size={14} className="text-emerald" /> {user?.role || "Researcher Workspace"}
+                          <ShieldCheck size={14} className="text-emerald" /> {user?.role ? t(user.role) : t("profile.authenticated_workspace")}
                         </p>
                       </div>
                     </div>
@@ -305,15 +306,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <div className="flex items-center gap-3 rounded-xl border border-[#EAF1F8] bg-[#F7F9FF] p-3 transition-colors hover:border-line hover:bg-mist/50">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-navy shadow-sm"><Mail size={15} /></div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">Email Account</p>
-                          <p className="truncate text-sm font-semibold text-ink">{user?.email || "Not signed in"}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("common.email_address", "Email Account")}</p>
+                          <p className="truncate text-sm font-semibold text-ink">{user?.email || t("Not signed in")}</p>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-3 rounded-xl border border-[#EAF1F8] bg-[#F7F9FF] p-3 transition-colors hover:border-line hover:bg-mist/50">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-navy shadow-sm"><Boxes size={15} /></div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">Workspace ID</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("Workspace ID")}</p>
                           <p className="truncate font-mono text-xs font-medium text-ink/70">{user?.id || "N/A"}</p>
                         </div>
                       </div>
@@ -322,7 +323,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   
                   <div className="flex gap-3 border-t border-line bg-[#F8FAFD] p-5">
                     <Link href="/profile" onClick={() => setProfileOpen(false)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 py-2.5 text-sm font-bold text-navy shadow-sm transition-colors hover:bg-mist hover:text-forest">
-                      <Settings size={16} /> Manage
+                      <Settings size={16} /> {t("Manage")}
                     </Link>
                     <button 
                       onClick={() => {
@@ -331,7 +332,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       }} 
                       className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-forest"
                     >
-                      Log out
+                      {t("common.sign_out", "Log out")}
                     </button>
                   </div>
                 </div>
@@ -339,7 +340,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-[1440px] px-5 py-7 md:px-7 lg:px-8">{children}</main>
+        <main className="w-full px-[15px] py-7">{children}</main>
       </div>
       {!isAuthRoute && <FloatingAIChat />}
     </div>

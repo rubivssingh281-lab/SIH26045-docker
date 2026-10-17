@@ -56,3 +56,16 @@ export const toolConfig = {
     sidebarItems: ["Which Act governs: Drugs & Cosmetics / Magic Remedies / FSSAI", "Advertising-claim restrictions triggered", "Labelling and presentation requirements", "Licensing route and evidence needed"]
   }
 } as const;
+
+export function getTranslatedToolConfig(tool: ToolKey, t: (k: string, fb?: string) => string) {
+  const cfg = toolConfig[tool];
+  const prefix = tool === "ip-navigator" ? "navigator" : tool === "formulation-classifier" ? "classifier" : tool;
+  return {
+    eyebrow: t(`tools.${prefix}_eyebrow`, cfg.eyebrow),
+    title: t(`tools.${prefix}_title`, cfg.title),
+    description: t(`tools.${prefix}_desc`, cfg.description),
+    prompt: t(`tools.${prefix}_prompt`, cfg.prompt),
+    sidebarTitle: t(`tools.${prefix}_sidebar_title`, cfg.sidebarTitle),
+    sidebarItems: cfg.sidebarItems.map((item, idx) => t(`tools.${prefix}_sidebar_${idx + 1}`, item)),
+  };
+}

@@ -115,10 +115,10 @@ export default function ReasoningPage() {
                 <Input value={a.label} onChange={e => update(a.id, { label: e.target.value })} className="h-9 max-w-[220px] text-sm font-semibold" placeholder={t("reasoning.label_placeholder")} />
                 <div className="ml-auto inline-flex rounded-control border border-line bg-white p-0.5">
                   {(["India", "International"] as const).map(j => (
-                    <button key={j} onClick={() => update(a.id, { jurisdiction: j })} className={cn("rounded-md px-2.5 py-1 text-xs font-semibold transition", a.jurisdiction === j ? "bg-forest text-white" : "text-ink/55 hover:bg-mist")}>{j}</button>
+                    <button key={j} onClick={() => update(a.id, { jurisdiction: j })} className={cn("rounded-md px-2.5 py-1 text-xs font-semibold transition", a.jurisdiction === j ? "bg-forest text-white" : "text-ink/55 hover:bg-mist")}>{j === "India" ? t("common.india", "India") : t("common.international", "International")}</button>
                   ))}
                 </div>
-                {aspects.length > 1 && <button onClick={() => removeAspect(a.id)} className="rounded-lg p-1.5 text-ink/40 hover:bg-mist hover:text-[#93000A]" aria-label="Remove aspect"><X size={16} /></button>}
+                {aspects.length > 1 && <button onClick={() => removeAspect(a.id)} className="rounded-lg p-1.5 text-ink/40 hover:bg-mist hover:text-[#93000A]" aria-label={t("reasoning.remove_aspect", "Remove aspect")}><X size={16} /></button>}
               </div>
               <Input value={a.query} onChange={e => update(a.id, { query: e.target.value })} className="mt-3" placeholder={t("reasoning.query_placeholder")} />
               <Textarea value={a.formulation} onChange={e => update(a.id, { formulation: e.target.value })} className="mt-2 min-h-16" placeholder={t("reasoning.formulation_placeholder")} />
@@ -160,9 +160,9 @@ export default function ReasoningPage() {
                 <div className="flex items-center gap-2">
                   <span className="inline-block h-3 w-3 rounded-sm" style={{ background: r.color }} />
                   <h2 className="serif text-lg text-forest">{r.label}</h2>
-                  {r.result.classification.matched && <Badge tone="navy">{r.result.classification.label}</Badge>}
-                  <Badge tone={bandTone[r.result.confidence.band]}>{r.result.confidence.band}</Badge>
-                  <Badge tone="default">{r.result.jurisdiction}</Badge>
+                  {r.result.classification.matched && r.result.classification.label && <Badge tone="navy">{t(r.result.classification.label)}</Badge>}
+                  <Badge tone={bandTone[r.result.confidence.band]}>{t(r.result.confidence.band)}</Badge>
+                  <Badge tone="default">{r.result.jurisdiction === "India" ? t("common.india", "India") : t("common.international", "International")}</Badge>
                 </div>
                 <TextToSpeech text={r.result.answer} />
               </div>
@@ -170,7 +170,7 @@ export default function ReasoningPage() {
                 {r.result.abstained && <div className="mb-3 flex items-center gap-2 rounded-control border border-line bg-mist px-3 py-2 text-sm font-semibold text-navy"><TriangleAlert size={15} /> {t("reasoning.abstained")}</div>}
                 {r.result.ai_unavailable && !r.result.abstained && <div className="mb-3 flex items-center gap-2 rounded-control border border-gold/40 bg-[#FFF8EC] px-3 py-2 text-xs font-semibold text-[#624000]"><AlertTriangle size={14} /> {t("reasoning.ai_unavailable")}</div>}
                 <div className="whitespace-pre-wrap text-sm leading-7 text-ink/80">{r.result.answer}</div>
-                <div className="mt-3 rounded-control border border-line bg-[#FFF8EC] px-3 py-2 text-xs leading-5 text-[#624000]">{r.result.disclaimer} {r.result.escalation}</div>
+                <div className="mt-3 rounded-control border border-line bg-[#FFF8EC] px-3 py-2 text-xs leading-5 text-[#624000]">{t(r.result.disclaimer)} {t(r.result.escalation)}</div>
 
                 <details className="mt-4 rounded-control border border-line bg-[#FAFBFD] p-3">
                   <summary className="flex cursor-pointer items-center gap-1.5 text-sm font-bold text-navy"><Network size={14} /> {t("reasoning.trace")}</summary>
@@ -178,7 +178,7 @@ export default function ReasoningPage() {
                     {r.result.trace.steps.map((s, i) => (
                       <li key={i} className="flex gap-2">
                         <div className="mt-0.5">{stepIcon(s.status)}</div>
-                        <div><p className="text-sm font-semibold text-navy">{s.title}</p><p className="text-xs text-ink/60">{s.details}</p></div>
+                        <div><p className="text-sm font-semibold text-navy">{t(s.title)}</p><p className="text-xs text-ink/60">{t(s.details)}</p></div>
                       </li>
                     ))}
                   </ol>
@@ -190,9 +190,9 @@ export default function ReasoningPage() {
                     {r.result.citations.map((c, i) => (
                       <li key={i} className="text-sm">
                         <span className="rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">{c.ref}</span>
-                        <span className="ml-2 font-semibold text-ink/85">{c.source_title}</span>
-                        <span className="ml-1 text-xs text-ink/55">— {c.citation}</span>
-                        {c.source_url?.startsWith("http") && <a href={c.source_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs font-bold text-gold hover:underline">source</a>}
+                        <span className="ml-2 font-semibold text-ink/85">{t(c.source_title)}</span>
+                        <span className="ml-1 text-xs text-ink/55">— {t(c.citation)}</span>
+                        {c.source_url?.startsWith("http") && <a href={c.source_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs font-bold text-gold hover:underline">{t("reasoning.source_link", "source")}</a>}
                       </li>
                     ))}
                     {r.result.citations.length === 0 && <li className="text-sm text-ink/50">{t("reasoning.no_citations")}</li>}

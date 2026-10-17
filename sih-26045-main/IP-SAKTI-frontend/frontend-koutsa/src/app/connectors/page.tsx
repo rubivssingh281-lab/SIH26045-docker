@@ -70,7 +70,7 @@ export default function ConnectorsPage() {
           <Card className="p-6">
             <h2 className="serif text-lg text-forest">{t("connectors.add_title")}</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div><label className="text-xs font-bold text-navy">{t("connectors.name")}</label><Input className="mt-1" value={form.name} onChange={e => set({ name: e.target.value })} placeholder="My WIPO subscription" /></div>
+              <div><label className="text-xs font-bold text-navy">{t("connectors.name")}</label><Input className="mt-1" value={form.name} onChange={e => set({ name: e.target.value })} placeholder={t("connectors.name_placeholder", "My WIPO subscription")} /></div>
               <div>
                 <label className="text-xs font-bold text-navy">{t("connectors.provider")}</label>
                 <select className="mt-1 h-11 w-full rounded-control border border-line bg-white px-3 text-sm" value={form.provider} onChange={e => set({ provider: e.target.value })}>
@@ -82,12 +82,12 @@ export default function ConnectorsPage() {
                 <label className="text-xs font-bold text-navy">{t("connectors.auth_type")}</label>
                 <select className="mt-1 h-11 w-full rounded-control border border-line bg-white px-3 text-sm" value={form.auth_type}
                   onChange={e => set({ auth_type: e.target.value, header_name: e.target.value === "bearer" ? "Authorization" : "X-API-Key" })}>
-                  <option value="bearer">Bearer token</option>
-                  <option value="header">API-key header</option>
+                  <option value="bearer">{t("connectors.bearer_token", "Bearer token")}</option>
+                  <option value="header">{t("connectors.apikey_header", "API-key header")}</option>
                 </select>
               </div>
               <div><label className="text-xs font-bold text-navy">{t("connectors.header_name")}</label><Input className="mt-1" value={form.header_name} onChange={e => set({ header_name: e.target.value })} /></div>
-              <div className="sm:col-span-2"><label className="text-xs font-bold text-navy">{t("connectors.api_key")}</label><Input type="password" className="mt-1" value={form.api_key} onChange={e => set({ api_key: e.target.value })} placeholder="paste your key — stored locally, masked" /></div>
+              <div className="sm:col-span-2"><label className="text-xs font-bold text-navy">{t("connectors.api_key")}</label><Input type="password" className="mt-1" value={form.api_key} onChange={e => set({ api_key: e.target.value })} placeholder={t("connectors.key_placeholder", "paste your key — stored locally, masked")} /></div>
             </div>
             <label className="mt-4 flex items-start gap-2 rounded-control border border-line bg-[#F3F7FC] p-3 text-xs leading-5 text-ink/70">
               <input type="checkbox" className="mt-0.5" checked={form.consent} onChange={e => set({ consent: e.target.checked })} />
@@ -112,7 +112,7 @@ export default function ConnectorsPage() {
                       <div className="ml-auto flex items-center gap-2">
                         <Button variant="secondary" size="sm" onClick={() => test(c.id)} disabled={busy === c.id}>{busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />} {t("connectors.test")}</Button>
                         <Button variant="secondary" size="sm" onClick={() => toggle(c)} disabled={busy === c.id}>{c.enabled ? t("connectors.disable") : t("connectors.enable")}</Button>
-                        <button onClick={() => remove(c.id)} disabled={busy === c.id} className="rounded-lg p-2 text-ink/40 hover:bg-mist hover:text-[#93000A]" aria-label="Delete"><Trash2 size={15} /></button>
+                        <button onClick={() => remove(c.id)} disabled={busy === c.id} className="rounded-lg p-2 text-ink/40 hover:bg-mist hover:text-[#93000A]" aria-label={t("common.delete", "Delete")}><Trash2 size={15} /></button>
                       </div>
                     </div>
                     <p className="mt-1.5 text-xs text-ink/55">{c.base_url}</p>

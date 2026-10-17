@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import re
 import time
 from pathlib import Path
 from typing import Any, Optional, Union
@@ -274,19 +275,35 @@ class BhashiniTranslator:
             )
 
 
+def _clean_translated_text(text: str) -> str:
+    if not text:
+        return text
+    # Strip machine translation artifact tokens
+    text = re.sub(r'<unk>|<pad>|<s>|</s>', '', text, flags=re.IGNORECASE)
+    # Collapse pathological repeated hyphenated suffixes (e.g. ᱼᱟᱱᱼᱟᱱ or -an-an)
+    text = re.sub(r'([ᱼ\-]\S+?)(?:\1){2,}', r'\1', text)
+    # Collapse repeated consecutive words (e.g. word word word...)
+    text = re.sub(r'(?<!\S)(\S+)(?:\s+\1){2,}(?!\S)', r'\1', text)
+    # Collapse repeated consecutive bigrams
+    text = re.sub(r'(?<!\S)(\S+\s+\S+)(?:\s+\1){2,}(?!\S)', r'\1', text)
+    # Clean excessive whitespace
+    text = re.sub(r'[ \t]{2,}', ' ', text).strip()
+    return text
+
+
 def _extract_outputs(response: dict) -> list[str]:
     outputs: list[str] = []
     for task in response.get("pipelineResponse", []) or []:
         for item in task.get("output", []) or []:
             value = item.get("target") or item.get("source") or item.get("translatedText")
             if value is not None:
-                outputs.append(str(value))
+                outputs.append(_clean_translated_text(str(value)))
     if outputs:
         return outputs
     for key in ("output", "outputs", "translations"):
         values = response.get(key)
         if isinstance(values, list):
-            return [str(item.get("target") or item.get("source") or item) if isinstance(item, dict) else str(item) for item in values]
+            return [_clean_translated_text(str(item.get("target") or item.get("source") or item) if isinstance(item, dict) else str(item)) for item in values]
     return []
 
 

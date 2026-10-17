@@ -157,12 +157,77 @@ export function getLanguageCode(name: string): string {
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (keyOrEnglish: string, paramsOrFallback?: Record<string, string | number> | string) => string;
   isTranslating: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-const cacheKey = (lang: string) => `ip-sakti-dict::v7::${lang}`;
+const cacheKey = (lang: string) => `ip-sakti-dict::v9::${lang}`;
+
+// Build reverse lookup index from English phrases to key paths
+const enToKeyMap: Record<string, string> = {
+  // Manual overrides for short common terms
+  "india": "common.india",
+  "international": "common.international",
+  "draft": "common.status_draft",
+  "pending": "common.status_pending",
+  "verifying": "common.status_verifying",
+  "in progress": "common.status_analyzing",
+  "complete": "common.status_complete",
+  "abstained": "common.status_abstained",
+  "escalated": "common.status_escalated",
+  "search": "archive.search",
+  "tool": "archive.tool",
+  "status": "archive.status",
+  "records": "archive.eyebrow",
+  "all": "archive.all",
+  "case": "archive.col_case",
+  "result": "archive.col_result",
+  "updated": "archive.col_updated",
+  "jurisdiction": "archive.jurisdiction",
+  "dashboard": "nav.dashboard",
+  "ask sahayak": "nav.ask_sahayak",
+  "ip navigator": "nav.ip_navigator",
+  "formulation classifier": "nav.formulation_classifier",
+  "abs compliance": "nav.abs_compliance",
+  "tkdl / prior art": "nav.tkdl_prior_art",
+  "regulatory pathway": "nav.regulatory_pathway",
+  "deep research": "nav.reasoning",
+  "case archive": "nav.case_archive",
+  "source library": "nav.source_library",
+  "connected sources": "nav.connectors",
+  "share": "case_view.share",
+  "report": "case_view.report",
+  "history": "case_view.history",
+  "run analysis": "case_view.run_analysis",
+  "re-run analysis": "case_view.rerun_analysis",
+  "running analysis…": "case_view.running_analysis",
+  "view explainability": "case_view.explainability",
+  "request human review": "case_view.request_human_review",
+  "requesting review…": "case_view.requesting_review",
+  "patent": "common.patent",
+  "trademark": "common.trademark",
+  "gi": "common.gi",
+  "design": "common.design",
+  "copyright": "common.copyright",
+  "plant variety": "common.plant_variety",
+};
+
+function indexObject(obj: any, prefix = "") {
+  if (!obj || typeof obj !== "object") return;
+  for (const [k, v] of Object.entries(obj)) {
+    const fullPath = prefix ? `${prefix}.${k}` : k;
+    if (typeof v === "string") {
+      const normalized = v.trim().toLowerCase();
+      if (!enToKeyMap[normalized]) {
+        enToKeyMap[normalized] = fullPath;
+      }
+    } else if (typeof v === "object") {
+      indexObject(v, fullPath);
+    }
+  }
+}
+indexObject(en);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("English");
@@ -206,21 +271,49 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const t = (key: string): string => {
-    const keys = key.split(".");
-    let current: any = dict;
-    for (const k of keys) {
-      if (current == null || current[k] === undefined) {
-        let fallback: any = en;
-        for (const fk of keys) {
-          if (fallback == null || fallback[fk] === undefined) return key;
-          fallback = fallback[fk];
-        }
-        return fallback as string;
-      }
-      current = current[k];
+  const resolvePath = (d: any, path: string): string | undefined => {
+    if (!d || !path) return undefined;
+    const parts = path.split(".");
+    let cur = d;
+    for (const part of parts) {
+      if (cur == null || cur[part] === undefined) return undefined;
+      cur = cur[part];
     }
-    return typeof current === "string" ? current : key;
+    return typeof cur === "string" ? cur : undefined;
+  };
+
+  const t = (keyOrEnglish: string, paramsOrFallback?: Record<string, string | number> | string): string => {
+    if (!keyOrEnglish) return "";
+    let lookupKey = keyOrEnglish;
+
+    // Check if directly resolves in dict
+    let res = resolvePath(dict, lookupKey);
+
+    // If not found, check if it's an English phrase that maps to a key
+    if (!res) {
+      const mappedKey = enToKeyMap[keyOrEnglish.trim().toLowerCase()];
+      if (mappedKey) {
+        lookupKey = mappedKey;
+        res = resolvePath(dict, mappedKey);
+      }
+    }
+
+    // Fallback to English dict
+    if (!res) {
+      res = resolvePath(en, lookupKey);
+    }
+
+    // Final fallback
+    let out = res ?? (typeof paramsOrFallback === "string" ? paramsOrFallback : keyOrEnglish);
+
+    // Apply template parameters if provided
+    if (paramsOrFallback && typeof paramsOrFallback === "object") {
+      for (const [pk, pv] of Object.entries(paramsOrFallback)) {
+        out = out.replace(new RegExp(`\\{${pk}\\}`, "g"), String(pv));
+      }
+    }
+
+    return out;
   };
 
   return (

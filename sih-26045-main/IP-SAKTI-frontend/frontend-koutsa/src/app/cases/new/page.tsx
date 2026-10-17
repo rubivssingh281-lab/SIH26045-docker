@@ -16,7 +16,7 @@ import type { FormulationClassifierInput, Jurisdiction, RegulatoryPathwayInput, 
 import { getApiErrorMessage } from "@/lib/api";
 import { FileUploadDropzone } from "@/components/domain/file-upload-dropzone";
 import { toast } from "sonner";
-import { toolConfig, toolKeys, type ToolKey } from "@/lib/tool-config";
+import { getTranslatedToolConfig, toolKeys, type ToolKey } from "@/lib/tool-config";
 
 const ipTypes = ["Patent", "GI", "Trademark", "Design", "Copyright", "Plant Variety"] as const;
 
@@ -28,7 +28,7 @@ export default function NewCasePage() {
   const uploadMutation = useUploadCaseDocument();
   const tool = (params.get("tool") as ToolKey | null);
   const activeTool: ToolKey = tool && toolKeys.includes(tool) ? tool : "ask";
-  const config = toolConfig[activeTool];
+  const config = getTranslatedToolConfig(activeTool, t);
 
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -222,34 +222,34 @@ export default function NewCasePage() {
                 <>
                   <div className="grid gap-5 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-bold" htmlFor="novelty">What's novel vs. new</label>
-                      <Textarea id="novelty" required value={novelty} onChange={e => setNovelty(e.target.value)} placeholder="Describe the technical, formulation, process or commercial features you believe are new." />
-                      <p className="mt-2 text-xs leading-5 text-ink/50">Focus on the feature you believe is genuinely new, not the traditional ingredients or uses you inherited.</p>
+                      <label className="mb-2 block text-sm font-bold" htmlFor="novelty">{t("What's novel vs. new")}</label>
+                      <Textarea id="novelty" required value={novelty} onChange={e => setNovelty(e.target.value)} placeholder={t("Describe the technical, formulation, process or commercial features you believe are new.")} />
+                      <p className="mt-2 text-xs leading-5 text-ink/50">{t("Focus on the feature you believe is genuinely new, not the traditional ingredients or uses you inherited.")}</p>
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-bold" htmlFor="traditional">What's traditional knowledge</label>
-                      <Textarea id="traditional" required value={traditional} onChange={e => setTraditional(e.target.value)} placeholder="Describe traditional ingredients, formulations, uses, source texts or community-held knowledge involved." />
-                      <p className="mt-2 text-xs leading-5 text-ink/50">Be explicit about known Ayurvedic texts, customary use or traditional formulation features.</p>
+                      <label className="mb-2 block text-sm font-bold" htmlFor="traditional">{t("What's traditional knowledge")}</label>
+                      <Textarea id="traditional" required value={traditional} onChange={e => setTraditional(e.target.value)} placeholder={t("Describe traditional ingredients, formulations, uses, source texts or community-held knowledge involved.")} />
+                      <p className="mt-2 text-xs leading-5 text-ink/50">{t("Be explicit about known Ayurvedic texts, customary use or traditional formulation features.")}</p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="mb-2 text-sm font-bold">IP types of interest</p>
+                    <p className="mb-2 text-sm font-bold">{t("IP types of interest")}</p>
                     <div className="flex flex-wrap gap-2">
                       {ipTypes.map(type => {
                         const selected = selectedIpTypes.includes(type);
-                        return <button key={type} type="button" aria-pressed={selected} onClick={() => toggleIpType(type)} className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-bold transition ${selected ? "border-forest bg-forest text-white" : "border-line bg-white text-navy hover:bg-mist"}`}><span className={`flex h-4 w-4 items-center justify-center rounded-full border ${selected ? "border-white bg-white text-forest" : "border-navy/30"}`}>{selected && <Check size={11} strokeWidth={3} />}</span>{type}</button>;
+                        return <button key={type} type="button" aria-pressed={selected} onClick={() => toggleIpType(type)} className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-bold transition ${selected ? "border-forest bg-forest text-white" : "border-line bg-white text-navy hover:bg-mist"}`}><span className={`flex h-4 w-4 items-center justify-center rounded-full border ${selected ? "border-white bg-white text-forest" : "border-navy/30"}`}>{selected && <Check size={11} strokeWidth={3} />}</span>{t(type)}</button>;
                       })}
                     </div>
-                    <p className="mt-2 text-xs leading-5 text-ink/50">Only selected regimes are sent as the navigator's retrieval scope.</p>
+                    <p className="mt-2 text-xs leading-5 text-ink/50">{t("Only selected regimes are sent as the navigator's retrieval scope.")}</p>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="stage">Commercialization stage</label>
+                    <label className="mb-2 block text-sm font-bold" htmlFor="stage">{t("Commercialization stage")}</label>
                     <select id="stage" value={stage} onChange={e => setStage(e.target.value as typeof stage)} className="h-11 w-full rounded-control border border-line bg-white px-3 text-sm outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/10">
-                      <option value="research">Research</option>
-                      <option value="pre-launch">Pre-launch</option>
-                      <option value="launched">Launched</option>
+                      <option value="research">{t("Research")}</option>
+                      <option value="pre-launch">{t("Pre-launch")}</option>
+                      <option value="launched">{t("Launched")}</option>
                     </select>
                   </div>
                 </>
@@ -258,21 +258,21 @@ export default function NewCasePage() {
                   <div>
                     <div className="flex items-end justify-between gap-3">
                       <div>
-                        <label className="block text-sm font-bold">Ingredients</label>
-                        <p className="mt-1 text-xs leading-5 text-ink/50">Add each ingredient separately and cite the source text you are relying on for that ingredient.</p>
+                        <label className="block text-sm font-bold">{t("Ingredients")}</label>
+                        <p className="mt-1 text-xs leading-5 text-ink/50">{t("Add each ingredient separately and cite the source text you are relying on for that ingredient.")}</p>
                       </div>
-                      <Button type="button" size="sm" variant="secondary" onClick={() => setIngredients(items => [...items, { id: `ingredient-${Date.now()}`, name: "", source_text_reference: "" }])}><Plus size={14} /> Add ingredient</Button>
+                      <Button type="button" size="sm" variant="secondary" onClick={() => setIngredients(items => [...items, { id: `ingredient-${Date.now()}`, name: "", source_text_reference: "" }])}><Plus size={14} /> {t("Add ingredient")}</Button>
                     </div>
                     <div className="mt-3 space-y-3">
                       {ingredients.map((ingredient, index) => (
                         <div key={ingredient.id} className="grid gap-3 rounded-lg border border-line bg-[#FBFCFD] p-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
                           <div>
-                            <label className="mb-1.5 block text-xs font-bold text-ink/65" htmlFor={`ingredient-${ingredient.id}`}>Ingredient {index + 1}</label>
-                            <Input id={`ingredient-${ingredient.id}`} value={ingredient.name} onChange={e => setIngredients(items => items.map(item => item.id === ingredient.id ? { ...item, name: e.target.value } : item))} placeholder="e.g. Ashwagandha root" />
+                            <label className="mb-1.5 block text-xs font-bold text-ink/65" htmlFor={`ingredient-${ingredient.id}`}>{t("Ingredient {index}", { index: index + 1 })}</label>
+                            <Input id={`ingredient-${ingredient.id}`} value={ingredient.name} onChange={e => setIngredients(items => items.map(item => item.id === ingredient.id ? { ...item, name: e.target.value } : item))} placeholder={t("e.g. Ashwagandha root")} />
                           </div>
                           <div>
-                            <label className="mb-1.5 block text-xs font-bold text-ink/65" htmlFor={`source-${ingredient.id}`}>Source text reference</label>
-                            <Input id={`source-${ingredient.id}`} value={ingredient.source_text_reference} onChange={e => setIngredients(items => items.map(item => item.id === ingredient.id ? { ...item, source_text_reference: e.target.value } : item))} placeholder="e.g. Charaka Samhita, Sutra 1" />
+                            <label className="mb-1.5 block text-xs font-bold text-ink/65" htmlFor={`source-${ingredient.id}`}>{t("Source text reference")}</label>
+                            <Input id={`source-${ingredient.id}`} value={ingredient.source_text_reference} onChange={e => setIngredients(items => items.map(item => item.id === ingredient.id ? { ...item, source_text_reference: e.target.value } : item))} placeholder={t("e.g. Charaka Samhita, Sutra 1")} />
                           </div>
                           <button type="button" aria-label={`Remove ingredient ${index + 1}`} onClick={() => setIngredients(items => items.length === 1 ? items : items.filter(item => item.id !== ingredient.id))} className="flex h-10 w-10 items-center justify-center rounded-control border border-line text-ink/50 hover:bg-[#FFF4F2] hover:text-[#93000A]"><Trash2 size={16} /></button>
                         </div>
@@ -281,28 +281,28 @@ export default function NewCasePage() {
                   </div>
 
                   <div>
-                    <p className="mb-2 block text-sm font-bold">Does it appear in a First-Schedule authoritative text?</p>
+                    <p className="mb-2 block text-sm font-bold">{t("Does it appear in a First-Schedule authoritative text?")}</p>
                     <div className="grid grid-cols-3 gap-2 rounded-control border border-line bg-white p-1">
                       {(["yes", "no", "unsure"] as const).map(option => (
-                        <button key={option} type="button" aria-pressed={sourceTextMatch === option} onClick={() => setSourceTextMatch(option)} className={`rounded-[6px] px-3 py-2.5 text-xs font-bold capitalize transition ${sourceTextMatch === option ? "bg-forest text-white" : "text-navy hover:bg-mist"}`}>{option}</button>
+                        <button key={option} type="button" aria-pressed={sourceTextMatch === option} onClick={() => setSourceTextMatch(option)} className={`rounded-[6px] px-3 py-2.5 text-xs font-bold capitalize transition ${sourceTextMatch === option ? "bg-forest text-white" : "text-navy hover:bg-mist"}`}>{option === "yes" ? t("Yes") : option === "no" ? t("No") : t("Unsure")}</button>
                       ))}
                     </div>
                   </div>
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-bold" htmlFor="processing-method">Processing / manufacturing method</label>
-                      <Textarea id="processing-method" required value={processingMethod} onChange={e => setProcessingMethod(e.target.value)} placeholder="Describe heating, extraction, purification, fermentation, dosage preparation or other manufacturing steps." />
+                      <label className="mb-2 block text-sm font-bold" htmlFor="processing-method">{t("Processing / manufacturing method")}</label>
+                      <Textarea id="processing-method" required value={processingMethod} onChange={e => setProcessingMethod(e.target.value)} placeholder={t("Describe heating, extraction, purification, fermentation, dosage preparation or other manufacturing steps.")} />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-bold" htmlFor="intended-use-claims">Intended use + claims</label>
-                      <Textarea id="intended-use-claims" required value={intendedUseAndClaims} onChange={e => setIntendedUseAndClaims(e.target.value)} placeholder="State the intended use and the exact therapeutic, wellness or other claims to be assessed." />
+                      <label className="mb-2 block text-sm font-bold" htmlFor="intended-use-claims">{t("Intended use + claims")}</label>
+                      <Textarea id="intended-use-claims" required value={intendedUseAndClaims} onChange={e => setIntendedUseAndClaims(e.target.value)} placeholder={t("State the intended use and the exact therapeutic, wellness or other claims to be assessed.")} />
                     </div>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="modifications">Modifications from classical formulation</label>
-                    <Textarea id="modifications" required value={modifications} onChange={e => setModifications(e.target.value)} placeholder="Describe any change to ingredients, proportions, dosage, processing or presentation compared with the classical formulation." />
+                    <label className="mb-2 block text-sm font-bold" htmlFor="modifications">{t("Modifications from classical formulation")}</label>
+                    <Textarea id="modifications" required value={modifications} onChange={e => setModifications(e.target.value)} placeholder={t("Describe any change to ingredients, proportions, dosage, processing or presentation compared with the classical formulation.")} />
                   </div>
                 </>
               ) : activeTool === "abs" ? (
@@ -310,17 +310,17 @@ export default function NewCasePage() {
                   <div>
                     <div className="flex items-end justify-between gap-3">
                       <div>
-                        <label className="block text-sm font-bold">Biological resource(s) used</label>
-                        <p className="mt-1 text-xs leading-5 text-ink/50">List each biological resource separately so access and source facts remain checkable.</p>
+                        <label className="block text-sm font-bold">{t("Biological resource(s) used")}</label>
+                        <p className="mt-1 text-xs leading-5 text-ink/50">{t("List each biological resource separately so access and source facts remain checkable.")}</p>
                       </div>
-                      <Button type="button" size="sm" variant="secondary" onClick={() => setAbsResources(items => [...items, { id: `abs-resource-${Date.now()}`, name: "" }])}><Plus size={14} /> Add resource</Button>
+                      <Button type="button" size="sm" variant="secondary" onClick={() => setAbsResources(items => [...items, { id: `abs-resource-${Date.now()}`, name: "" }])}><Plus size={14} /> {t("Add resource")}</Button>
                     </div>
                     <div className="mt-3 space-y-3">
                       {absResources.map((resource, index) => (
                         <div key={resource.id} className="flex gap-3">
                           <div className="flex-1">
-                            <label className="mb-1.5 block text-xs font-bold text-ink/65" htmlFor={resource.id}>Resource {index + 1}</label>
-                            <Input id={resource.id} value={resource.name} onChange={e => setAbsResources(items => items.map(item => item.id === resource.id ? { ...item, name: e.target.value } : item))} placeholder="e.g. Ashwagandha root" />
+                            <label className="mb-1.5 block text-xs font-bold text-ink/65" htmlFor={resource.id}>{t("Resource {index}", { index: index + 1 })}</label>
+                            <Input id={resource.id} value={resource.name} onChange={e => setAbsResources(items => items.map(item => item.id === resource.id ? { ...item, name: e.target.value } : item))} placeholder={t("e.g. Ashwagandha root")} />
                           </div>
                           <button type="button" aria-label={`Remove resource ${index + 1}`} onClick={() => setAbsResources(items => items.length === 1 ? items : items.filter(item => item.id !== resource.id))} className="mt-6 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line text-ink/50 hover:bg-[#FFF4F2] hover:text-[#93000A]"><Trash2 size={16} /></button>
                         </div>
@@ -329,42 +329,42 @@ export default function NewCasePage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="abs-origin">Source / origin location</label>
-                    <Input id="abs-origin" required value={absOrigin} onChange={e => setAbsOrigin(e.target.value)} placeholder="e.g. Uttar Pradesh, India — district / region if known" />
-                    <p className="mt-2 text-xs leading-5 text-ink/50">Use the access location or provenance you know; geography can affect the backend ABS assessment.</p>
+                    <label className="mb-2 block text-sm font-bold" htmlFor="abs-origin">{t("Source / origin location")}</label>
+                    <Input id="abs-origin" required value={absOrigin} onChange={e => setAbsOrigin(e.target.value)} placeholder={t("e.g. Uttar Pradesh, India — district / region if known")} />
+                    <p className="mt-2 text-xs leading-5 text-ink/50">{t("Use the access location or provenance you know; geography can affect the backend ABS assessment.")}</p>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="abs-access">Access context</label>
+                    <label className="mb-2 block text-sm font-bold" htmlFor="abs-access">{t("Access context")}</label>
                     <select id="abs-access" value={absAccessContext} onChange={e => setAbsAccessContext(e.target.value as typeof absAccessContext)} className="h-11 w-full rounded-control border border-line bg-white px-3 text-sm outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/10">
-                      <option value="wild-collected">Wild-collected</option>
-                      <option value="cultivated">Cultivated</option>
-                      <option value="community-sourced">Community-sourced</option>
-                      <option value="purchased-from-registered-supplier">Purchased from registered supplier</option>
+                      <option value="wild-collected">{t("Wild-collected")}</option>
+                      <option value="cultivated">{t("Cultivated")}</option>
+                      <option value="community-sourced">{t("Community-sourced")}</option>
+                      <option value="purchased-from-registered-supplier">{t("Purchased from registered supplier")}</option>
                     </select>
                   </div>
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <div>
-                      <p className="mb-2 text-sm font-bold">Community / TK holder involvement</p>
+                      <p className="mb-2 text-sm font-bold">{t("Community / TK holder involvement")}</p>
                       <div className="grid grid-cols-2 gap-2 rounded-control border border-line bg-white p-1">
-                        {(["yes", "no"] as const).map(option => <button key={option} type="button" aria-pressed={absCommunity === option} onClick={() => setAbsCommunity(option)} className={`rounded-[6px] px-3 py-2.5 text-xs font-bold capitalize transition ${absCommunity === option ? "bg-forest text-white" : "text-navy hover:bg-mist"}`}>{option}</button>)}
+                        {(["yes", "no"] as const).map(option => <button key={option} type="button" aria-pressed={absCommunity === option} onClick={() => setAbsCommunity(option)} className={`rounded-[6px] px-3 py-2.5 text-xs font-bold capitalize transition ${absCommunity === option ? "bg-forest text-white" : "text-navy hover:bg-mist"}`}>{option === "yes" ? t("Yes") : t("No")}</button>)}
                       </div>
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-bold" htmlFor="abs-commercial">Intended commercial use</label>
+                      <label className="mb-2 block text-sm font-bold" htmlFor="abs-commercial">{t("Intended commercial use")}</label>
                       <select id="abs-commercial" value={absCommercialUse} onChange={e => setAbsCommercialUse(e.target.value as typeof absCommercialUse)} className="h-11 w-full rounded-control border border-line bg-white px-3 text-sm outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/10">
-                        <option value="domestic-sale">Domestic sale</option>
-                        <option value="export">Export</option>
-                        <option value="licensing">Licensing</option>
-                        <option value="research-only">Research only</option>
+                        <option value="domestic-sale">{t("Domestic sale")}</option>
+                        <option value="export">{t("Export")}</option>
+                        <option value="licensing">{t("Licensing")}</option>
+                        <option value="research-only">{t("Research only")}</option>
                       </select>
                     </div>
                   </div>
 
                   {absCommunity === "yes" && <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="abs-community-description">Community / TK holder description</label>
-                    <Textarea id="abs-community-description" required value={absCommunityDescription} onChange={e => setAbsCommunityDescription(e.target.value)} placeholder="Describe the community or traditional-knowledge holder involvement, known consent/process context, or relevant knowledge contribution." />
+                    <label className="mb-2 block text-sm font-bold" htmlFor="abs-community-description">{t("Community / TK holder description")}</label>
+                    <Textarea id="abs-community-description" required value={absCommunityDescription} onChange={e => setAbsCommunityDescription(e.target.value)} placeholder={t("Describe the community or traditional-knowledge holder involvement, known consent/process context, or relevant knowledge contribution.")} />
                   </div>}
                 </>
               ) : (
@@ -391,17 +391,17 @@ export default function NewCasePage() {
               {activeTool === "tkdl" && (
                 <div className="space-y-5">
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="tkdl-formulation">Formulation / technique description</label>
-                    <Textarea id="tkdl-formulation" required value={tkdlFormulation} onChange={e => setTkdlFormulation(e.target.value)} placeholder="Describe the formulation, preparation technique, traditional use, ingredients and process features relevant to the prior-art search." />
+                    <label className="mb-2 block text-sm font-bold" htmlFor="tkdl-formulation">{t("Formulation / technique description")}</label>
+                    <Textarea id="tkdl-formulation" required value={tkdlFormulation} onChange={e => setTkdlFormulation(e.target.value)} placeholder={t("Describe the formulation, preparation technique, traditional use, ingredients and process features relevant to the prior-art search.")} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="tkdl-source-reference">Source text or oral-tradition reference <span className="font-medium text-ink/45">(if known)</span></label>
-                    <Textarea id="tkdl-source-reference" value={tkdlSourceReference} onChange={e => setTkdlSourceReference(e.target.value)} placeholder="e.g. classical text, chapter/verse, practitioner record, community reference or oral-tradition note." />
+                    <label className="mb-2 block text-sm font-bold" htmlFor="tkdl-source-reference">{t("Source text or oral-tradition reference")} <span className="font-medium text-ink/45">({t("if known")})</span></label>
+                    <Textarea id="tkdl-source-reference" value={tkdlSourceReference} onChange={e => setTkdlSourceReference(e.target.value)} placeholder={t("e.g. classical text, chapter/verse, practitioner record, community reference or oral-tradition note.")} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="tkdl-novel">What do you believe may be novel?</label>
-                    <Textarea id="tkdl-novel" required value={tkdlNovelFeature} onChange={e => setTkdlNovelFeature(e.target.value)} placeholder="Be specific about the feature, method, combination or use you want the prior-art search to scope." />
-                    <p className="mt-2 text-xs leading-5 text-ink/50">This scopes retrieval; it is not a frontend determination of novelty.</p>
+                    <label className="mb-2 block text-sm font-bold" htmlFor="tkdl-novel">{t("What do you believe may be novel?")}</label>
+                    <Textarea id="tkdl-novel" required value={tkdlNovelFeature} onChange={e => setTkdlNovelFeature(e.target.value)} placeholder={t("Be specific about the feature, method, combination or use you want the prior-art search to scope.")} />
+                    <p className="mt-2 text-xs leading-5 text-ink/50">{t("This scopes retrieval; it is not a frontend determination of novelty.")}</p>
                   </div>
                 </div>
               )}
@@ -409,19 +409,23 @@ export default function NewCasePage() {
               {activeTool === "regulatory" && (
                 <div className="space-y-5">
                   <div>
-                    <label className="mb-2 block text-sm font-bold" htmlFor="reg-product-form">Product form</label>
+                    <label className="mb-2 block text-sm font-bold" htmlFor="reg-product-form">{t("Product form")}</label>
                     <select id="reg-product-form" value={regulatoryProductForm} onChange={e => setRegulatoryProductForm(e.target.value as RegulatoryPathwayInput["product_form"])} className="h-11 w-full rounded-control border border-line bg-white px-3 text-sm outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/10">
-                      <option value="tablet">Tablet</option><option value="oil">Oil</option><option value="powder">Powder</option><option value="cosmetic">Cosmetic</option><option value="food-supplement">Food supplement</option>
+                      <option value="tablet">{t("Tablet")}</option>
+                      <option value="oil">{t("Oil")}</option>
+                      <option value="powder">{t("Powder")}</option>
+                      <option value="cosmetic">{t("Cosmetic")}</option>
+                      <option value="food-supplement">{t("Food supplement")}</option>
                     </select>
-                    <p className="mt-2 text-xs leading-5 text-ink/50">Product form helps scope the backend route before claim and labelling checks.</p>
+                    <p className="mt-2 text-xs leading-5 text-ink/50">{t("Product form helps scope the backend route before claim and labelling checks.")}</p>
                   </div>
                   <div className="grid gap-5 md:grid-cols-2">
-                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-use">Intended use</label><Textarea id="reg-use" required value={regulatoryIntendedUse} onChange={e => setRegulatoryIntendedUse(e.target.value)} placeholder="What is the product intended to do or support?" /></div>
-                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-claims">Claims made on label / marketing</label><Textarea id="reg-claims" required value={regulatoryClaims} onChange={e => setRegulatoryClaims(e.target.value)} placeholder="Enter the claims exactly or as closely as possible." /></div>
+                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-use">{t("Intended use")}</label><Textarea id="reg-use" required value={regulatoryIntendedUse} onChange={e => setRegulatoryIntendedUse(e.target.value)} placeholder={t("What is the product intended to do or support?")} /></div>
+                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-claims">{t("Claims made on label / marketing")}</label><Textarea id="reg-claims" required value={regulatoryClaims} onChange={e => setRegulatoryClaims(e.target.value)} placeholder={t("Enter the claims exactly or as closely as possible.")} /></div>
                   </div>
                   <div className="grid gap-5 md:grid-cols-2">
-                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-dosage">Dosage / directions for use</label><Textarea id="reg-dosage" required value={regulatoryDosage} onChange={e => setRegulatoryDosage(e.target.value)} placeholder="Dosage, frequency, route and directions for use." /></div>
-                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-channel">Marketing channel</label><select id="reg-channel" value={regulatoryChannel} onChange={e => setRegulatoryChannel(e.target.value as RegulatoryPathwayInput["marketing_channel"])} className="h-11 w-full rounded-control border border-line bg-white px-3 text-sm outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/10"><option value="otc">OTC</option><option value="prescription">Prescription</option><option value="e-commerce">E-commerce</option><option value="export">Export</option></select></div>
+                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-dosage">{t("Dosage / directions for use")}</label><Textarea id="reg-dosage" required value={regulatoryDosage} onChange={e => setRegulatoryDosage(e.target.value)} placeholder={t("Dosage, frequency, route and directions for use.")} /></div>
+                    <div><label className="mb-2 block text-sm font-bold" htmlFor="reg-channel">{t("Marketing channel")}</label><select id="reg-channel" value={regulatoryChannel} onChange={e => setRegulatoryChannel(e.target.value as RegulatoryPathwayInput["marketing_channel"])} className="h-11 w-full rounded-control border border-line bg-white px-3 text-sm outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/10"><option value="otc">{t("OTC")}</option><option value="prescription">{t("Prescription")}</option><option value="e-commerce">{t("E-commerce")}</option><option value="export">{t("Export")}</option></select></div>
                   </div>
                 </div>
               )}
@@ -443,7 +447,7 @@ export default function NewCasePage() {
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-5">
-                <p className="text-xs text-ink/55">{activeTool === "ip-navigator" ? "Your novelty/traditional split and selected IP regimes are carried into the backend case context." : activeTool === "formulation-classifier" ? "Your structured ingredient and formulation facts are carried into the backend classification pipeline." : activeTool === "abs" ? "Your resource, geography, access, community and use facts are carried into the backend ABS pathway assessment." : activeTool === "tkdl" ? "Your search scope is used to retrieve public TKDL and prior-art candidates; restricted TKDL content is never fabricated or displayed." : activeTool === "regulatory" ? "Your product form, use, claims, dosage and marketing channel are carried into the backend regulatory pathway assessment." : "You will review extracted facts before the backend analysis stage."}</p>
+                <p className="text-xs text-ink/55">{activeTool === "ip-navigator" ? t("Your novelty/traditional split and selected IP regimes are carried into the backend case context.") : activeTool === "formulation-classifier" ? t("Your structured ingredient and formulation facts are carried into the backend classification pipeline.") : activeTool === "abs" ? t("Your resource, geography, access, community and use facts are carried into the backend ABS pathway assessment.") : activeTool === "tkdl" ? t("Your search scope is used to retrieve public TKDL and prior-art candidates; restricted TKDL content is never fabricated or displayed.") : activeTool === "regulatory" ? t("Your product form, use, claims, dosage and marketing channel are carried into the backend regulatory pathway assessment.") : t("You will review extracted facts before the backend analysis stage.")}</p>
                 <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? t("case_new.creating_case") : <>{t("case_new.continue_fact_review")} <ArrowRight size={16} /></>}</Button>
               </div>
             </form>

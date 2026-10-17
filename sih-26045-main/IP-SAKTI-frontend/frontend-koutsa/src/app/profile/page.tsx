@@ -59,24 +59,24 @@ export default function ProfilePage() {
           <div className="flex items-start gap-4"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-mist text-navy"><ShieldCheck size={22}/></div><div><p className="eyebrow">{t("profile.account")}</p><h2 className="serif mt-1 text-2xl text-forest">{t("profile.research_identity")}</h2></div></div>
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="eyebrow block">First Name</label>
-              <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="e.g. Aditi" />
+              <label className="eyebrow block">{t("common.first_name", "First Name")}</label>
+              <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={t("common.placeholder_first_name", "e.g. Aditi")} />
             </div>
             <div className="space-y-2">
-              <label className="eyebrow block">Last Name</label>
-              <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="e.g. Sharma" />
+              <label className="eyebrow block">{t("common.last_name", "Last Name")}</label>
+              <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder={t("common.placeholder_last_name", "e.g. Sharma")} />
             </div>
             <div className="space-y-2">
-              <label className="eyebrow block">Job Role</label>
-              <Input value={role} onChange={e => setRole(e.target.value)} placeholder="e.g. Lead Researcher" />
+              <label className="eyebrow block">{t("common.job_role", "Job Role")}</label>
+              <Input value={role} onChange={e => setRole(e.target.value)} placeholder={t("common.placeholder_job_role", "e.g. Lead Researcher")} />
             </div>
             <div className="space-y-2">
-              <label className="eyebrow block">Email Address (Read-only)</label>
+              <label className="eyebrow block">{t("common.email_address", "Email Address (Read-only)")}</label>
               <Input value={user?.email || ""} disabled className="bg-mist text-ink/70" />
             </div>
             <div className="sm:col-span-2 space-y-2">
-              <label className="eyebrow block">Physical Address</label>
-              <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Research Park, New Delhi" />
+              <label className="eyebrow block">{t("common.physical_address", "Physical Address")}</label>
+              <Input value={address} onChange={e => setAddress(e.target.value)} placeholder={t("common.placeholder_address", "e.g. 123 Research Park, New Delhi")} />
             </div>
           </div>
           <div className="mt-6 rounded-lg border border-line p-5"><div className="flex items-center gap-3"><Globe2 size={20} className="text-navy"/><div><p className="font-bold">{t("profile.default_jurisdiction")}</p><p className="mt-1 text-xs text-ink/55">{t("profile.jurisdiction_desc")}</p></div></div><div className="mt-5 grid gap-3">{(["INDIA"] as Jurisdiction[]).map(item=><button key={item} type="button" onClick={()=>setJurisdiction(item)} className={`rounded-lg border px-4 py-3 text-left text-sm font-bold ${jurisdiction===item?"border-forest bg-[#E9F3F0] text-forest":"border-line bg-white text-ink/65"}`}>{item === "INDIA" ? t("profile.india") : t("profile.international")}</button>)}</div></div>

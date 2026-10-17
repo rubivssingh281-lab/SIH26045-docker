@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authApi, getApiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/components/providers";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export default function AuthVerifyPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const params = useSearchParams();
   const { setSession } = useAuth();
@@ -75,24 +77,24 @@ export default function AuthVerifyPage() {
       <div className="flex min-h-[100dvh] w-full items-center justify-center bg-canvas px-6 py-10 md:px-12">
         <div className="w-full max-w-md text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-forest text-white"><Leaf size={27}/></div>
-          <p className="eyebrow mt-6">Verify your email</p>
-          <h1 className="serif mt-2 text-4xl text-forest">Enter your verification code</h1>
-          <p className="mt-3 text-sm leading-6 text-ink/60">We sent a 6-digit OTP to <span className="font-bold text-forest">{email || "your email address"}</span>.</p>
+          <p className="eyebrow mt-6">{t("auth.verify_email", "Verify your email")}</p>
+          <h1 className="serif mt-2 text-4xl text-forest">{t("auth.enter_verification_code", "Enter your verification code")}</h1>
+          <p className="mt-3 text-sm leading-6 text-ink/60">{t("auth.sent_otp_to_email", "We sent a 6-digit OTP to {email}.").replace("{email}", email || "your email address")}</p>
           {devOtp && (
             <div className="mt-5 rounded-xl border border-[#E4D8BC] bg-[#FBF6E7] px-4 py-3 text-left text-sm text-[#6B5A21]">
-              <p className="font-bold">Demo mode — email delivery is off</p>
+              <p className="font-bold">{t("auth.demo_mode_off", "Demo mode — email delivery is off")}</p>
               <p className="mt-1">Your verification code is <span className="font-mono text-lg font-bold tracking-widest text-forest">{devOtp}</span> (pre-filled below). Configure the mail settings in <span className="font-mono">backend/.env</span> to send real emails.</p>
             </div>
           )}
           <form onSubmit={verify} className="mt-8 space-y-5">
             <Input ref={otpRef} value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" className="h-16 text-center text-2xl tracking-[.5em]" required/>
-            {error && <div role="alert" className="rounded-lg border border-[#FFD0CB] bg-[#FFF1EF] px-4 py-3 text-sm text-[#93000A]">{error}</div>}
-            {info && !error && !devOtp && <div className="rounded-lg border border-[#CFE5DF] bg-[#F0F8F5] px-4 py-3 text-sm text-forest">{info}</div>}
-            <Button className="h-14 w-full" size="lg" disabled={loading || otp.length!==6}>{loading ? "Verifying…" : <>Verify email <ArrowRight size={18}/></>}</Button>
+            {error && <div role="alert" className="rounded-lg border border-[#FFD0CB] bg-[#FFF1EF] px-4 py-3 text-sm text-[#93000A]">{t(error)}</div>}
+            {info && !error && !devOtp && <div className="rounded-lg border border-[#CFE5DF] bg-[#F0F8F5] px-4 py-3 text-sm text-forest">{t(info)}</div>}
+            <Button className="h-14 w-full" size="lg" disabled={loading || otp.length!==6}>{loading ? t("auth.verifying", "Verifying…") : <>{t("auth.verify_email_button", "Verify email")} <ArrowRight size={18}/></>}</Button>
           </form>
-          <div className="mt-4 flex items-center justify-center gap-3 text-xs text-ink/50"><span>Expires in 00:{secondsLeft.toString().padStart(2,"0")}</span><button type="button" onClick={resend} disabled={secondsLeft>0 || loading} className="inline-flex items-center gap-1 font-bold text-gold disabled:text-ink/25"><RefreshCw size={13}/> Resend</button></div>
-          <div className="mt-8 flex items-center justify-center gap-2 text-xs text-ink/45"><CheckCircle2 size={15}/> Secure verification for your research workspace.</div>
-          <Link href="/auth/login" className="mt-6 inline-block text-sm font-bold text-forest hover:underline">Back to sign in</Link>
+          <div className="mt-4 flex items-center justify-center gap-3 text-xs text-ink/50"><span>{t("auth.expires_in", "Expires in {time}").replace("{time}", "00:" + secondsLeft.toString().padStart(2,"0"))}</span><button type="button" onClick={resend} disabled={secondsLeft>0 || loading} className="inline-flex items-center gap-1 font-bold text-gold disabled:text-ink/25"><RefreshCw size={13}/> {t("auth.resend", "Resend")}</button></div>
+          <div className="mt-8 flex items-center justify-center gap-2 text-xs text-ink/45"><CheckCircle2 size={15}/> {t("auth.secure_verification", "Secure verification for your research workspace.")}</div>
+          <Link href="/auth/login" className="mt-6 inline-block text-sm font-bold text-forest hover:underline">{t("auth.back_to_login", "Back to sign in")}</Link>
         </div>
       </div>
     </main>

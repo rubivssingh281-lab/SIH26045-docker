@@ -34,10 +34,10 @@ function MetricCard({
   return (
     <Card className="p-5 transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="eyebrow">{label}</p>
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow line-clamp-1">{label}</p>
           {loading ? <Skeleton className="mt-2 h-10 w-16" /> : <p className="serif mt-1 text-3xl text-forest">{value}</p>}
-          <p className="mt-1 text-xs leading-5 text-ink/55">{helper}</p>
+          <p className="mt-1 text-xs leading-5 text-ink/55 line-clamp-2">{helper}</p>
         </div>
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tones[tone]}`}>
           <Icon size={19} strokeWidth={1.8} />
@@ -61,7 +61,8 @@ export function CaseStatisticsCards({ statistics, isLoading }: { statistics: Cas
 
 export function ClassificationPieChart({ statistics, isLoading }: { statistics: CaseStatistics; isLoading: boolean }) {
   const { t } = useLanguage();
-  const data = statistics.classification;
+  const rawData = statistics.classification;
+  const data = rawData.map(d => ({ ...d, name: t(d.name) }));
   const hasData = data.some(item => item.value > 0);
 
   return (
