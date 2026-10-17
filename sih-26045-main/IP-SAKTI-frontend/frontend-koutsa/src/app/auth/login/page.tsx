@@ -202,17 +202,20 @@ export default function LoginPage() {
     <main className="min-h-[100dvh] w-full overflow-x-hidden bg-forest">
       <div className="grid min-h-[100dvh] w-full overflow-hidden bg-canvas md:grid-cols-[.96fr_1.04fr] xl:grid-cols-[.9fr_1.1fr]">
         <AuthVisual mode="login" />
-        <section className="flex items-center justify-center bg-canvas px-6 py-10 md:px-10 xl:px-16">
-          <div className="w-full max-w-[560px]">
-            <div className="lg:hidden mb-8 flex items-center gap-3 text-forest"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-forest text-white"><ShieldCheck size={22} /></div><div><div className="serif text-2xl">IP-SAKTI</div><div className="text-xs text-ink/55">Sahayak AI</div></div></div>
-            <p className="eyebrow">{t("auth.welcome_back", "Welcome back")}</p>
-            <h1 className="serif mt-2 text-4xl leading-tight text-forest md:text-5xl">{t("auth.sign_in_account", "Sign in to your account")}</h1>
-            <p className="mt-3 text-sm leading-6 text-ink/60">{t("auth.sign_in_desc", "Continue your Ayurvedic IP research from where you left off.")}</p>
+        <section className="flex items-center justify-center bg-canvas px-4 py-6 sm:px-8 sm:py-10 md:px-10 xl:px-16 min-h-[100dvh]">
+          <div className="w-full max-w-[520px]">
+            <div className="lg:hidden mb-4 sm:mb-6 flex items-center gap-2.5 sm:gap-3 text-forest">
+              <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-forest text-white"><ShieldCheck size={20} /></div>
+              <div><div className="serif text-xl sm:text-2xl leading-none">IP-SAKTI</div><div className="text-[11px] sm:text-xs text-ink/55">Sahayak AI</div></div>
+            </div>
+            <p className="eyebrow text-[10px] sm:text-[11px]">{t("auth.welcome_back", "Welcome back")}</p>
+            <h1 className="serif mt-1 sm:mt-2 text-2xl sm:text-3xl md:text-5xl leading-tight text-forest">{t("auth.sign_in_account", "Sign in to your account")}</h1>
+            <p className="mt-1 sm:mt-2 text-xs sm:text-sm leading-5 sm:leading-6 text-ink/60">{t("auth.sign_in_desc", "Continue your Ayurvedic IP research from where you left off.")}</p>
 
-            <div className="mt-8 rounded-control border border-line bg-white p-1">
+            <div className="mt-4 sm:mt-6 rounded-control border border-line bg-white p-1">
               <div className="grid grid-cols-2 gap-1">
                 {(["password", "otp"] as LoginMode[]).map(item => (
-                  <button key={item} type="button" onClick={() => switchMode(item)} className={`h-11 rounded-[7px] text-sm font-bold ${mode === item ? "bg-forest text-white" : "text-navy hover:bg-mist"}`}>
+                  <button key={item} type="button" onClick={() => switchMode(item)} className={`h-10 sm:h-11 rounded-[7px] text-xs sm:text-sm font-bold transition active:scale-95 ${mode === item ? "bg-forest text-white" : "text-navy hover:bg-mist"}`}>
                     {item === "password" ? t("auth.password", "Password") : t("auth.login_with_otp", "Login with OTP")}
                   </button>
                 ))}
@@ -220,31 +223,83 @@ export default function LoginPage() {
             </div>
 
             {mode === "password" ? (
-              <form onSubmit={handlePasswordLogin} className="mt-7 space-y-5">
-                <div><label htmlFor="login-email" className="mb-2 block text-sm font-bold">{t("auth.email_address", "Email address")}</label><div className="relative"><Mail className="absolute left-4 top-3.5 text-ink/35" size={18}/><Input id="login-email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t("auth.email_placeholder", "you@example.com")} className="h-14 pl-11" required/></div></div>
-                <div><div className="mb-2 flex items-center justify-between"><label htmlFor="login-password" className="text-sm font-bold">{t("auth.password", "Password")}</label><Link href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`} className="text-xs font-bold text-emerald hover:underline">{t("auth.forgot_password", "Forgot password?")}</Link></div><div className="relative"><LockKeyhole className="absolute left-4 top-3.5 text-ink/35" size={18}/><Input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder={t("auth.password_placeholder", "Enter your password")} className="h-14 pl-11 pr-12" required/><button type="button" onClick={() => setShowPassword(v => !v)} aria-label={t("auth.password", "Password")} className="absolute right-3 top-2.5 rounded-lg p-2 text-ink/40 hover:bg-mist">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></div>
-                <Button type="submit" size="lg" className="h-14 w-full" disabled={loading}>{loading ? t("auth.signing_in", "Signing in…") : <>{t("auth.sign_in", "Sign in")} <ArrowRight size={18}/></>}</Button>
+              <form onSubmit={handlePasswordLogin} className="mt-4 sm:mt-6 space-y-3.5 sm:space-y-5">
+                <div>
+                  <label htmlFor="login-email" className="mb-1 sm:mb-2 block text-xs sm:text-sm font-bold">{t("auth.email_address", "Email address")}</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-3 sm:top-3.5 text-ink/35" size={17}/>
+                    <Input id="login-email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t("auth.email_placeholder", "you@example.com")} className="h-11 sm:h-14 pl-10 sm:pl-11 text-xs sm:text-sm" required/>
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-1 sm:mb-2 flex items-center justify-between">
+                    <label htmlFor="login-password" className="text-xs sm:text-sm font-bold">{t("auth.password", "Password")}</label>
+                    <Link href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`} className="text-[11px] sm:text-xs font-bold text-emerald hover:underline">{t("auth.forgot_password", "Forgot password?")}</Link>
+                  </div>
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3.5 top-3 sm:top-3.5 text-ink/35" size={17}/>
+                    <Input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder={t("auth.password_placeholder", "Enter your password")} className="h-11 sm:h-14 pl-10 sm:pl-11 pr-11 text-xs sm:text-sm" required/>
+                    <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={t("auth.password", "Password")} className="absolute right-2.5 top-1.5 sm:top-2.5 rounded-lg p-2 text-ink/40 hover:bg-mist">
+                      {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
+                    </button>
+                  </div>
+                </div>
+                <Button type="submit" size="lg" className="h-11 sm:h-14 w-full text-xs sm:text-sm" disabled={loading}>
+                  {loading ? t("auth.signing_in", "Signing in…") : <>{t("auth.sign_in", "Sign in")} <ArrowRight size={16}/></>}
+                </Button>
               </form>
             ) : (
-              <form onSubmit={otpStage === "request" ? requestOtp : verifyOtp} className="mt-7 space-y-5">
-                {otpStage === "request" ? <div><label htmlFor="otp-email" className="mb-2 block text-sm font-bold">{t("auth.email_address", "Email address")}</label><div className="relative"><Mail className="absolute left-4 top-3.5 text-ink/35" size={18}/><Input id="otp-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t("auth.email_placeholder", "you@example.com")} className="h-14 pl-11" required/></div></div> : <div className="rounded-xl border border-[#D4E4DF] bg-[#F0F8F5] p-4"><div className="flex items-center gap-3"><Mail size={18} className="text-forest"/><div className="min-w-0 flex-1"><p className="text-xs font-bold uppercase tracking-wide text-ink/45">{t("auth.otp_sent_to", "OTP sent to")}</p><p className="mt-1 truncate text-sm font-semibold text-forest">{maskEmail(email)}</p></div><button type="button" onClick={() => {setOtpStage("request");setOtp("");setError("");}} className="text-xs font-bold text-gold hover:underline">{t("auth.edit", "Edit")}</button></div></div>}
-                {otpStage === "verify" && <div><label htmlFor="login-otp" className="mb-2 block text-sm font-bold">{t("auth.verification_code", "Verification code")}</label><Input ref={otpRef} id="login-otp" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" maxLength={6} className="h-16 text-center text-2xl tracking-[.5em]" required/><div className="mt-2 flex justify-between text-xs text-ink/50"><span>{t("auth.expires_in", "Expires in {time}").replace("{time}", expiryLabel)}</span><button type="button" onClick={() => requestOtp()} disabled={secondsLeft > 0} className="inline-flex items-center gap-1 font-bold text-gold disabled:text-ink/25"><RefreshCw size={13}/> {t("auth.resend_otp", "Resend OTP")}</button></div></div>}
-                <Button type="submit" size="lg" className="h-14 w-full" disabled={loading || (otpStage === "verify" && otp.length !== 6)}>{loading ? (otpStage === "request" ? t("auth.sending_otp", "Sending OTP…") : t("auth.verifying", "Verifying…")) : <>{otpStage === "request" ? t("auth.send_otp", "Send OTP") : t("auth.verify_continue", "Verify & continue")}<ArrowRight size={18}/></>}</Button>
+              <form onSubmit={otpStage === "request" ? requestOtp : verifyOtp} className="mt-4 sm:mt-6 space-y-3.5 sm:space-y-5">
+                {otpStage === "request" ? (
+                  <div>
+                    <label htmlFor="otp-email" className="mb-1 sm:mb-2 block text-xs sm:text-sm font-bold">{t("auth.email_address", "Email address")}</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-3 sm:top-3.5 text-ink/35" size={17}/>
+                      <Input id="otp-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t("auth.email_placeholder", "you@example.com")} className="h-11 sm:h-14 pl-10 sm:pl-11 text-xs sm:text-sm" required/>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-[#D4E4DF] bg-[#F0F8F5] p-3 sm:p-4">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <Mail size={17} className="text-forest"/>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wide text-ink/45">{t("auth.otp_sent_to", "OTP sent to")}</p>
+                        <p className="mt-0.5 truncate text-xs sm:text-sm font-semibold text-forest">{maskEmail(email)}</p>
+                      </div>
+                      <button type="button" onClick={() => {setOtpStage("request");setOtp("");setError("");}} className="text-xs font-bold text-gold hover:underline">{t("auth.edit", "Edit")}</button>
+                    </div>
+                  </div>
+                )}
+                {otpStage === "verify" && (
+                  <div>
+                    <label htmlFor="login-otp" className="mb-1 sm:mb-2 block text-xs sm:text-sm font-bold">{t("auth.verification_code", "Verification code")}</label>
+                    <Input ref={otpRef} id="login-otp" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" maxLength={6} className="h-12 sm:h-16 text-center text-xl sm:text-2xl tracking-[.4em]" required/>
+                    <div className="mt-2 flex justify-between text-[11px] sm:text-xs text-ink/50">
+                      <span>{t("auth.expires_in", "Expires in {time}").replace("{time}", expiryLabel)}</span>
+                      <button type="button" onClick={() => requestOtp()} disabled={secondsLeft > 0} className="inline-flex items-center gap-1 font-bold text-gold disabled:text-ink/25">
+                        <RefreshCw size={12}/> {t("auth.resend_otp", "Resend OTP")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <Button type="submit" size="lg" className="h-11 sm:h-14 w-full text-xs sm:text-sm" disabled={loading || (otpStage === "verify" && otp.length !== 6)}>
+                  {loading ? (otpStage === "request" ? t("auth.sending_otp", "Sending OTP…") : t("auth.verifying", "Verifying…")) : <>{otpStage === "request" ? t("auth.send_otp", "Send OTP") : t("auth.verify_continue", "Verify & continue")}<ArrowRight size={16}/></>}
+                </Button>
               </form>
             )}
 
-            {error && <div role="alert" className="mt-4 rounded-lg border border-[#FFD0CB] bg-[#FFF1EF] px-4 py-3 text-sm text-[#93000A]">{t(error)}</div>}
-            {info && !error && <div className="mt-4 rounded-lg border border-[#CFE5DF] bg-[#F0F8F5] px-4 py-3 text-sm text-forest">{t(info)}</div>}
+            {error && <div role="alert" className="mt-3 rounded-lg border border-[#FFD0CB] bg-[#FFF1EF] p-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-[#93000A]">{t(error)}</div>}
+            {info && !error && <div className="mt-3 rounded-lg border border-[#CFE5DF] bg-[#F0F8F5] p-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-forest">{t(info)}</div>}
 
-            <div className="my-8 flex items-center gap-3 text-xs text-ink/35"><span className="h-px flex-1 bg-line"/><span>{t("auth.or", "OR")}</span><span className="h-px flex-1 bg-line"/></div>
+            <div className="my-5 sm:my-8 flex items-center gap-3 text-xs text-ink/35"><span className="h-px flex-1 bg-line"/><span>{t("auth.or", "OR")}</span><span className="h-px flex-1 bg-line"/></div>
 
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="flex h-14 w-full items-center justify-center gap-3 rounded-control border border-line bg-white px-4 text-sm font-bold text-navy shadow-sm transition-all hover:bg-mist active:scale-[0.99] disabled:opacity-60"
+              className="flex h-11 sm:h-14 w-full items-center justify-center gap-2.5 sm:gap-3 rounded-control border border-line bg-white px-4 text-xs sm:text-sm font-bold text-navy shadow-sm transition-all hover:bg-mist active:scale-[0.99] disabled:opacity-60"
             >
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
@@ -253,8 +308,8 @@ export default function LoginPage() {
               {t("auth.continue_with_google", "Continue with Google")}
             </button>
 
-            <p className="mt-8 text-center text-sm text-ink/60">{t("auth.no_account", "Don't have an account?")} <Link href="/auth/register" className="font-bold text-forest hover:underline">{t("auth.create_account", "Create an account")}</Link></p>
-            <div className="mt-8 flex items-center justify-center gap-2 text-xs text-ink/45"><ShieldCheck size={15}/> {t("auth.workspace_protected", "Your research workspace is securely protected.")}</div>
+            <p className="mt-5 sm:mt-8 text-center text-xs sm:text-sm text-ink/60">{t("auth.no_account", "Don't have an account?")} <Link href="/auth/register" className="font-bold text-forest hover:underline">{t("auth.create_account", "Create an account")}</Link></p>
+            <div className="mt-4 sm:mt-8 flex items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-ink/45"><ShieldCheck size={14}/> {t("auth.workspace_protected", "Your research workspace is securely protected.")}</div>
           </div>
         </section>
       </div>

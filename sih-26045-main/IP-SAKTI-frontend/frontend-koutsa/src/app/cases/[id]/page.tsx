@@ -94,49 +94,51 @@ export default function AnalysisPage() {
         title={caseItem.title} 
         description={isAsk ? t("case_view.desc_ask", "A grounded answer with supporting citations and an assessment-confidence indicator.") : t("case_view.desc_default", "Backend analysis is the source of truth. This screen only presents returned classification, evidence, confidence and next actions.")} 
         action={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <ShareCaseButton />
-            <Button variant="secondary" onClick={() => router.push(`/cases/${id}/report`)}>
-              <Download size={16} /> {t("case_view.report", "Report")}
+            <Button variant="secondary" size="sm" onClick={() => router.push(`/cases/${id}/report`)}>
+              <Download size={14} className="sm:size-4" /> {t("case_view.report", "Report")}
             </Button>
-            <Button variant="secondary" onClick={() => router.push(`/cases/${id}/history`)}>
-              <History size={16} /> {t("case_view.history", "History")}
+            <Button variant="secondary" size="sm" onClick={() => router.push(`/cases/${id}/history`)}>
+              <History size={14} className="sm:size-4" /> {t("case_view.history", "History")}
             </Button>
           </div>
         } 
       />
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-card border border-line bg-white p-4">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 rounded-card border border-line bg-white p-3 sm:p-4">
         <div>
-          <p className="eyebrow">{t("case_view.research_context", "Research context")}</p>
-          <p className="mt-1 text-sm font-semibold">{t("case_view.as_of", "As of")} {caseItem.as_of_date}</p>
+          <p className="eyebrow text-[10px] sm:text-[11px]">{t("case_view.research_context", "Research context")}</p>
+          <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm font-semibold">{t("case_view.as_of", "As of")} {caseItem.as_of_date}</p>
         </div>
-        <JurisdictionToggle value={jurisdiction} onChange={setJurisdiction} />
-        {!isAsk && (
-          <Button onClick={runAnalysis} disabled={analyze.isPending}>
-            {analyze.isPending ? t("case_view.running_analysis", "Running analysis…") : result ? t("case_view.rerun_analysis", "Re-run analysis") : t("case_view.run_analysis", "Run analysis")} <ArrowRight size={16} />
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <JurisdictionToggle value={jurisdiction} onChange={setJurisdiction} />
+          {!isAsk && (
+            <Button size="sm" onClick={runAnalysis} disabled={analyze.isPending} className="sm:h-10 sm:px-4">
+              {analyze.isPending ? t("case_view.running_analysis", "Running analysis…") : result ? t("case_view.rerun_analysis", "Re-run analysis") : t("case_view.run_analysis", "Run analysis")} <ArrowRight size={15} />
+            </Button>
+          )}
+        </div>
       </div>
 
       {isAsk ? (
-        <div className="space-y-6">
-          <Card className="p-6 bg-[#EEF5FF] border-[#D6E3FF]">
-            <p className="eyebrow">{t("case_view.your_question", "Your question")}</p>
-            <p className="mt-2 text-base leading-7 text-navy">{caseItem.description.split("\n\n")[0].replace(/^Question:\s*/i, "")}</p>
+        <div className="space-y-4 sm:space-y-6">
+          <Card className="p-4 sm:p-6 bg-[#EEF5FF] border-[#D6E3FF]">
+            <p className="eyebrow text-[10px] sm:text-[11px]">{t("case_view.your_question", "Your question")}</p>
+            <p className="mt-1.5 sm:mt-2 text-sm sm:text-base leading-6 sm:leading-7 text-navy">{caseItem.description.split("\n\n")[0].replace(/^Question:\s*/i, "")}</p>
           </Card>
           {assistant.data ? <GroundedAnswer result={assistant.data} /> : (
-            <Card className="p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF5FF] text-navy"><FileCheck2 /></div>
-              <h2 className="serif mt-4 text-3xl text-forest">{t("case_view.ready_answer_title", "Ready for a grounded answer")}</h2>
-              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-ink/65">{t("case_view.ready_answer_desc", "Sahayak will retrieve supporting evidence, validate citations and return an assessment-confidence indicator.")}</p>
-              <Button className="mt-5" onClick={runAskAnswer} disabled={assistant.isPending}>
-                {assistant.isPending ? t("case_view.grounding_answer", "Grounding answer…") : t("case_view.get_grounded_answer", "Get grounded answer")} <ArrowRight size={16} />
+            <Card className="p-5 sm:p-8 text-center">
+              <div className="mx-auto flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-[#EEF5FF] text-navy"><FileCheck2 size={20} className="sm:size-6" /></div>
+              <h2 className="serif mt-3 sm:mt-4 text-2xl sm:text-3xl text-forest">{t("case_view.ready_answer_title", "Ready for a grounded answer")}</h2>
+              <p className="mx-auto mt-1.5 sm:mt-2 max-w-xl text-xs sm:text-sm leading-5 sm:leading-6 text-ink/65">{t("case_view.ready_answer_desc", "Sahayak will retrieve supporting evidence, validate citations and return an assessment-confidence indicator.")}</p>
+              <Button size="sm" className="mt-4 sm:mt-5 sm:h-11 sm:px-5" onClick={runAskAnswer} disabled={assistant.isPending}>
+                {assistant.isPending ? t("case_view.grounding_answer", "Grounding answer…") : t("case_view.get_grounded_answer", "Get grounded answer")} <ArrowRight size={15} />
               </Button>
             </Card>
           )}
           <div className="flex justify-end">
-            <Button variant="secondary" onClick={runAskAnswer} disabled={assistant.isPending}>
+            <Button variant="secondary" size="sm" onClick={runAskAnswer} disabled={assistant.isPending}>
               {assistant.isPending ? t("case_view.refreshing", "Refreshing…") : t("case_view.refresh_answer", "Refresh answer")}
             </Button>
           </div>
@@ -145,9 +147,9 @@ export default function AnalysisPage() {
       ) : (
         <>
           {!result && !caseItem.confidence && (
-            <Card className="p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF5FF] text-navy"><FileCheck2 /></div>
-              <h2 className="serif mt-4 text-3xl text-forest">{t("case_view.facts_ready_title", "Facts confirmed. Ready for analysis.")}</h2>
+            <Card className="p-5 sm:p-8 text-center">
+              <div className="mx-auto flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-[#EEF5FF] text-navy"><FileCheck2 size={20} className="sm:size-6" /></div>
+              <h2 className="serif mt-3 sm:mt-4 text-2xl sm:text-3xl text-forest">{t("case_view.facts_ready_title", "Facts confirmed. Ready for analysis.")}</h2>
               <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-ink/65">{t("case_view.facts_ready_desc", "Run the backend analysis to retrieve the classification, applicable rule, evidence and confidence breakdown.")}</p>
             </Card>
           )}

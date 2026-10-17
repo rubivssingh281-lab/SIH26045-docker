@@ -66,3 +66,16 @@ button, input, textarea, select { font: inherit; }
     @apply text-sm text-ink/65;
   }
 }
+
+/* Hide scrollbar for clean horizontal chip swiping on mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.safe-area-pb {
+  padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
+}

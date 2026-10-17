@@ -32,15 +32,19 @@ function MetricCard({
   };
 
   return (
-    <Card className="p-5 transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between gap-3">
+    <Card className="p-3 sm:p-5 transition-shadow hover:shadow-md">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <p className="eyebrow line-clamp-1">{label}</p>
-          {loading ? <Skeleton className="mt-2 h-10 w-16" /> : <p className="serif mt-1 text-3xl text-forest">{value}</p>}
-          <p className="mt-1 text-xs leading-5 text-ink/55 line-clamp-2">{helper}</p>
+          <p className="eyebrow text-[10px] sm:text-[11px] truncate">{label}</p>
+          {loading ? (
+            <Skeleton className="mt-1.5 h-7 w-14 sm:h-9 sm:w-16" />
+          ) : (
+            <p className="serif mt-0.5 sm:mt-1 text-2xl sm:text-3xl text-forest font-normal leading-tight">{value}</p>
+          )}
+          <p className="hidden xs:block mt-0.5 sm:mt-1 text-[11px] sm:text-xs leading-4 sm:leading-5 text-ink/55 line-clamp-1 sm:line-clamp-2">{helper}</p>
         </div>
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tones[tone]}`}>
-          <Icon size={19} strokeWidth={1.8} />
+        <div className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg ${tones[tone]}`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
         </div>
       </div>
     </Card>
@@ -50,7 +54,7 @@ function MetricCard({
 export function CaseStatisticsCards({ statistics, isLoading }: { statistics: CaseStatistics; isLoading: boolean }) {
   const { t } = useLanguage();
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
       <MetricCard label={t("dashboard.cases_analyzed")} value={statistics.totalCasesAnalyzed} helper={t("dashboard.stat_analyzed_desc")} icon={BarChart3} loading={isLoading} tone="forest" />
       <MetricCard label={t("dashboard.pending")} value={statistics.pending} helper={t("dashboard.stat_pending_desc")} icon={Clock3} loading={isLoading} tone="navy" />
       <MetricCard label={t("dashboard.complete")} value={statistics.complete} helper={t("dashboard.stat_complete_desc")} icon={CheckCircle2} loading={isLoading} tone="emerald" />
@@ -66,18 +70,18 @@ export function ClassificationPieChart({ statistics, isLoading }: { statistics: 
   const hasData = data.some(item => item.value > 0);
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <div>
-        <p className="eyebrow">{t("dashboard.classification_mix")}</p>
-        <h2 className="serif mt-1 text-2xl text-forest">{t("dashboard.formulation_assessments")}</h2>
-        <p className="mt-1 text-sm text-ink/55">{t("dashboard.classification_desc")}</p>
+        <p className="eyebrow text-[10px] sm:text-[11px]">{t("dashboard.classification_mix")}</p>
+        <h2 className="serif mt-0.5 sm:mt-1 text-xl sm:text-2xl text-forest">{t("dashboard.formulation_assessments")}</h2>
+        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-ink/55 line-clamp-2">{t("dashboard.classification_desc")}</p>
       </div>
 
-      <div className="mt-4 h-[250px] w-full">
+      <div className="mt-2 sm:mt-4 h-[180px] sm:h-[240px] w-full">
         {isLoading ? (
-          <div className="flex h-full items-center justify-center"><Skeleton className="h-40 w-40 rounded-full" /></div>
+          <div className="flex h-full items-center justify-center"><Skeleton className="h-32 w-32 sm:h-40 sm:w-40 rounded-full" /></div>
         ) : !hasData ? (
-          <div className="flex h-full items-center justify-center text-center text-sm text-ink/50">{t("dashboard.no_classification_data")}</div>
+          <div className="flex h-full items-center justify-center text-center text-xs sm:text-sm text-ink/50">{t("dashboard.no_classification_data")}</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -86,9 +90,9 @@ export function ClassificationPieChart({ statistics, isLoading }: { statistics: 
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
-                cy="48%"
-                innerRadius={55}
-                outerRadius={88}
+                cy="46%"
+                innerRadius={45}
+                outerRadius={72}
                 paddingAngle={3}
                 stroke="#FFFFFF"
                 strokeWidth={2}
@@ -101,7 +105,7 @@ export function ClassificationPieChart({ statistics, isLoading }: { statistics: 
                 formatter={(value, name) => [value, name]}
                 contentStyle={{ borderRadius: 10, border: "1px solid #E4E7EB", background: "#FFFFFF", boxShadow: "0 4px 20px rgba(23, 42, 70, 0.08)" }}
               />
-              <Legend iconType="circle" verticalAlign="bottom" height={38} wrapperStyle={{ fontSize: 11, fontWeight: 600 }} />
+              <Legend iconType="circle" verticalAlign="bottom" height={32} wrapperStyle={{ fontSize: 10, fontWeight: 600 }} />
             </PieChart>
           </ResponsiveContainer>
         )}

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, CalendarDays, Check, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ChevronDown, ChevronUp, ClipboardCheck, FileText, Gavel, MessageSquare, Network, Plus, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { useCreateCase, useUploadCaseDocument } from "@/hooks/queries/use-cases";
 import { useLanguage } from "@/components/providers/language-provider";
 import { Breadcrumb, PageHeader } from "@/components/domain/page-header";
@@ -17,8 +17,18 @@ import { getApiErrorMessage } from "@/lib/api";
 import { FileUploadDropzone } from "@/components/domain/file-upload-dropzone";
 import { toast } from "sonner";
 import { getTranslatedToolConfig, toolKeys, type ToolKey } from "@/lib/tool-config";
+import { cn } from "@/lib/utils";
 
 const ipTypes = ["Patent", "GI", "Trademark", "Design", "Copyright", "Plant Variety"] as const;
+
+const TOOL_TABS: Array<{ key: ToolKey; labelKey: string; defaultLabel: string; icon: typeof MessageSquare }> = [
+  { key: "ask", labelKey: "nav.ask_sahayak", defaultLabel: "Ask Sahayak", icon: MessageSquare },
+  { key: "ip-navigator", labelKey: "nav.ip_navigator", defaultLabel: "IP Navigator", icon: Gavel },
+  { key: "formulation-classifier", labelKey: "nav.formulation_classifier", defaultLabel: "Classifier", icon: ClipboardCheck },
+  { key: "abs", labelKey: "nav.abs_compliance", defaultLabel: "ABS", icon: ShieldCheck },
+  { key: "tkdl", labelKey: "nav.tkdl_prior_art", defaultLabel: "TKDL", icon: FileText },
+  { key: "regulatory", labelKey: "nav.regulatory_pathway", defaultLabel: "Regulatory", icon: Network },
+];
 
 export default function NewCasePage() {
   const { t } = useLanguage();
@@ -30,6 +40,7 @@ export default function NewCasePage() {
   const activeTool: ToolKey = tool && toolKeys.includes(tool) ? tool : "ask";
   const config = getTranslatedToolConfig(activeTool, t);
 
+  const [guidanceOpen, setGuidanceOpen] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -210,14 +221,39 @@ export default function NewCasePage() {
     <div>
       <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }, { label: config.title }]} />
       <PageHeader eyebrow={config.eyebrow} title={config.title} description={config.description} />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+
+      {/* Mobile Tool Switcher Strip */}
+      <div className="no-scrollbar mb-3 sm:mb-5 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 -mx-3 px-3 sm:mx-0 sm:px-0">
+        {TOOL_TABS.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTool === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => router.push(`/cases/new?tool=${tab.key}`)}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all active:scale-95",
+                isActive
+                  ? "bg-forest text-white shadow-sm font-bold"
+                  : "bg-white text-ink/70 border border-line hover:bg-mist hover:text-navy"
+              )}
+            >
+              <Icon size={13} />
+              <span>{t(tab.labelKey, tab.defaultLabel)}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card>
-          <CardHeader>
-            <p className="eyebrow">{activeTool === "ip-navigator" ? t("case_new.intake_navigator") : activeTool === "formulation-classifier" ? t("case_new.intake_classifier") : activeTool === "abs" ? t("case_new.intake_abs") : activeTool === "tkdl" ? t("case_new.intake_tkdl") : activeTool === "regulatory" ? t("case_new.intake_regulatory") : t("case_new.intake_default")}</p>
-            <h2 className="serif mt-1 text-2xl text-forest">{activeTool === "ip-navigator" ? t("case_new.brief_navigator") : activeTool === "formulation-classifier" ? t("case_new.brief_classifier") : activeTool === "abs" ? t("case_new.brief_abs") : activeTool === "tkdl" ? t("case_new.brief_tkdl") : activeTool === "regulatory" ? t("case_new.brief_regulatory") : t("case_new.brief_default")}</h2>
+          <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+            <p className="eyebrow text-[10px] sm:text-[11px]">{activeTool === "ip-navigator" ? t("case_new.intake_navigator") : activeTool === "formulation-classifier" ? t("case_new.intake_classifier") : activeTool === "abs" ? t("case_new.intake_abs") : activeTool === "tkdl" ? t("case_new.intake_tkdl") : activeTool === "regulatory" ? t("case_new.intake_regulatory") : t("case_new.intake_default")}</p>
+            <h2 className="serif mt-0.5 sm:mt-1 text-xl sm:text-2xl text-forest">{activeTool === "ip-navigator" ? t("case_new.brief_navigator") : activeTool === "formulation-classifier" ? t("case_new.brief_classifier") : activeTool === "abs" ? t("case_new.brief_abs") : activeTool === "tkdl" ? t("case_new.brief_tkdl") : activeTool === "regulatory" ? t("case_new.brief_regulatory") : t("case_new.brief_default")}</h2>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={submit} className="space-y-6">
+          <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
+            <form onSubmit={submit} className="space-y-4 sm:space-y-6">
               {activeTool === "ip-navigator" ? (
                 <>
                   <div className="grid gap-5 md:grid-cols-2">
@@ -454,18 +490,32 @@ export default function NewCasePage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-5">
-          <Card className="p-6">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EAF3FF] text-navy"><Sparkles size={21} /></div>
-            <h3 className="serif mt-4 text-2xl text-forest">{config.sidebarTitle}</h3>
-            <div className="mt-4 space-y-3 text-sm leading-6 text-ink/70">
-              {sidebarItems.map(text => <div key={text} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />{text}</div>)}
+        {/* Mobile Toggle for Guidance */}
+        <div className="lg:hidden">
+          <button
+            type="button"
+            onClick={() => setGuidanceOpen(v => !v)}
+            className="flex w-full items-center justify-between rounded-card border border-line bg-white p-3.5 text-xs font-bold text-forest shadow-sm active:bg-mist"
+          >
+            <span className="flex items-center gap-2">
+              <Sparkles size={16} className="text-gold" /> {config.sidebarTitle}
+            </span>
+            {guidanceOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
+
+        <div className={cn("space-y-4 sm:space-y-5", !guidanceOpen && "hidden lg:block")}>
+          <Card className="p-4 sm:p-6">
+            <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-[#EAF3FF] text-navy"><Sparkles size={18} className="sm:size-[21px]" /></div>
+            <h3 className="serif mt-3 sm:mt-4 text-xl sm:text-2xl text-forest">{config.sidebarTitle}</h3>
+            <div className="mt-3 sm:mt-4 space-y-2.5 sm:space-y-3 text-xs sm:text-sm leading-5 sm:leading-6 text-ink/70">
+              {sidebarItems.map(text => <div key={text} className="flex gap-2.5 sm:gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />{text}</div>)}
             </div>
           </Card>
-          <div className="rounded-card border border-[#D6E3FF] bg-[#EEF5FF] p-6">
-            <p className="eyebrow">{t("case_new.jurisdiction_sidebar")}</p>
-            <h3 className="serif mt-1 text-2xl text-navy">{jurisdiction === "INDIA" ? t("case_new.india_research") : t("case_new.international_research")}</h3>
-            <p className="mt-2 text-xs leading-5 text-navy/65">{t("case_new.jurisdiction_desc")}</p>
+          <div className="rounded-card border border-[#D6E3FF] bg-[#EEF5FF] p-4 sm:p-6">
+            <p className="eyebrow text-[10px] sm:text-[11px]">{t("case_new.jurisdiction_sidebar")}</p>
+            <h3 className="serif mt-1 text-xl sm:text-2xl text-navy">{jurisdiction === "INDIA" ? t("case_new.india_research") : t("case_new.international_research")}</h3>
+            <p className="mt-1.5 sm:mt-2 text-xs leading-5 text-navy/65">{t("case_new.jurisdiction_desc")}</p>
           </div>
           <Disclaimer />
         </div>

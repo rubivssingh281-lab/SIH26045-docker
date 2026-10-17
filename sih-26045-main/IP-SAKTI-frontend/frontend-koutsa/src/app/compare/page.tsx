@@ -95,39 +95,53 @@ export default function ComparePage() {
       <PageHeader eyebrow={t("compare.eyebrow")} title={t("compare.title")} description={t("compare.description")} />
 
       {/* Input */}
-      <Card className="p-6">
-        <label className="text-sm font-bold text-navy" htmlFor="jd-query">{t("compare.query_label")}</label>
-        <Input id="jd-query" className="mt-2" value={query} onChange={e => setQuery(e.target.value)} placeholder={t("compare.query_placeholder")} />
-        <label className="mt-5 block text-sm font-bold text-navy" htmlFor="jd-formulation">{t("compare.formulation_label")}</label>
-        <Textarea id="jd-formulation" className="mt-2" value={formulation} onChange={e => setFormulation(e.target.value)} placeholder={t("compare.formulation_placeholder")} />
-        <label className="mt-5 block text-sm font-bold text-navy" htmlFor="jd-ingredients">{t("compare.ingredients_label")}</label>
-        <Input id="jd-ingredients" className="mt-2" value={ingredients} onChange={e => setIngredients(e.target.value)} placeholder={t("compare.ingredients_placeholder")} />
-        <div className="mt-6">
-          <Button onClick={run} disabled={loading}>
-            {loading ? <><Loader2 size={16} className="animate-spin" /> {t("compare.running")}</> : <><Globe2 size={16} /> {t("compare.run")}</>}
+      <Card className="p-4 sm:p-6">
+        <label className="text-xs sm:text-sm font-bold text-navy" htmlFor="jd-query">{t("compare.query_label")}</label>
+        <Input id="jd-query" className="mt-1.5 sm:mt-2 text-xs sm:text-sm h-10 sm:h-11" value={query} onChange={e => setQuery(e.target.value)} placeholder={t("compare.query_placeholder")} />
+        
+        <label className="mt-3.5 sm:mt-5 block text-xs sm:text-sm font-bold text-navy" htmlFor="jd-formulation">{t("compare.formulation_label")}</label>
+        <Textarea id="jd-formulation" rows={3} className="mt-1.5 sm:mt-2 text-xs sm:text-sm" value={formulation} onChange={e => setFormulation(e.target.value)} placeholder={t("compare.formulation_placeholder")} />
+        
+        <label className="mt-3.5 sm:mt-5 block text-xs sm:text-sm font-bold text-navy" htmlFor="jd-ingredients">{t("compare.ingredients_label")}</label>
+        <Input id="jd-ingredients" className="mt-1.5 sm:mt-2 text-xs sm:text-sm h-10 sm:h-11" value={ingredients} onChange={e => setIngredients(e.target.value)} placeholder={t("compare.ingredients_placeholder")} />
+        
+        <div className="mt-4 sm:mt-6">
+          <Button onClick={run} disabled={loading} size="sm" className="sm:h-11 sm:px-5">
+            {loading ? <><Loader2 size={15} className="animate-spin" /> {t("compare.running")}</> : <><Globe2 size={15} /> {t("compare.run")}</>}
           </Button>
         </div>
       </Card>
 
       {result && (
-        <div className="mt-6 space-y-6">
+        <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
           {/* Jurisdiction selector */}
-          <div className="inline-flex rounded-control border border-line bg-white p-1" role="group" aria-label="Jurisdiction view">
+          <div className="flex w-full sm:inline-flex rounded-control border border-line bg-white p-1" role="group" aria-label="Jurisdiction view">
             {([["india", t("compare.view_india")], ["international", t("compare.view_international")], ["diff", t("compare.view_diff")]] as [View, string][]).map(([key, label]) => (
-              <button key={key} onClick={() => setView(key)} className={cn("rounded-lg px-4 py-2 text-sm font-semibold transition", view === key ? "bg-forest text-white shadow-sm" : "text-ink/60 hover:bg-mist")}>{label}</button>
+              <button
+                key={key}
+                onClick={() => setView(key)}
+                className={cn(
+                  "flex-1 sm:flex-none rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition text-center",
+                  view === key ? "bg-forest text-white shadow-sm font-bold" : "text-ink/60 hover:bg-mist"
+                )}
+              >
+                {label}
+              </button>
             ))}
           </div>
 
           {result.ai_unavailable && (
-            <div className="flex items-center gap-2 rounded-control border border-gold/40 bg-[#FFF8EC] px-4 py-3 text-sm font-semibold text-[#624000]">
-              <AlertTriangle size={16} /> {t("compare.ai_unavailable")}
+            <div className="flex items-center gap-2 rounded-control border border-gold/40 bg-[#FFF8EC] p-3 text-xs sm:text-sm font-semibold text-[#624000]">
+              <AlertTriangle size={15} className="shrink-0" /> {t("compare.ai_unavailable")}
             </div>
           )}
 
           {/* Overall result */}
           <Card className="overflow-hidden">
-            <div className="border-b border-line bg-[#F3F7FC] px-6 py-4"><h2 className="serif text-xl text-forest">{t("compare.overall_result")}</h2></div>
-            <div className="grid gap-4 p-6 md:grid-cols-2">
+            <div className="border-b border-line bg-[#F3F7FC] px-4 sm:px-6 py-3 sm:py-4">
+              <h2 className="serif text-lg sm:text-xl text-forest">{t("compare.overall_result")}</h2>
+            </div>
+            <div className="grid gap-3 sm:gap-4 p-4 sm:p-6 md:grid-cols-2">
               {showIndia && (
                 <div className="rounded-card border border-line p-5">
                   <p className="text-xs font-bold uppercase tracking-wider text-ink/45">{t("compare.in_india")}</p>

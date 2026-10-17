@@ -115,11 +115,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-canvas">
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#CCD4D0] bg-[#F7F9FF] py-5 transition-all duration-200 lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-[55] flex flex-col h-[100dvh] max-h-[100dvh] border-r border-[#CCD4D0] bg-[#F7F9FF] transition-all duration-200 lg:translate-x-0 overflow-hidden",
         sidebarWidth,
-        mobileOpen ? "translate-x-0" : "-translate-x-full"
+        mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
       )}>
-        <div className={cn("flex items-center px-4", collapsed ? "justify-center" : "justify-between")}>
+        <div className={cn("flex shrink-0 items-center px-4 pt-5 pb-1", collapsed ? "justify-center" : "justify-between")}>
           <Link href="/dashboard" className="flex items-center gap-3" onClick={() => setMobileOpen(false)} aria-label="Go to IP-SAKTI dashboard">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-forest text-white"><Leaf size={22} /></div>
             {!collapsed && <div>
@@ -127,46 +127,59 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="mt-1 text-xs font-semibold text-ink/65">Sahayak AI</div>
             </div>}
           </Link>
-          <button className="rounded-lg p-2 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation"><X size={19} /></button>
+          <button className="rounded-lg p-2 text-ink/75 hover:bg-white lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation"><X size={19} /></button>
         </div>
 
-        <div className="px-4">
+        <div className="shrink-0 px-4 mt-3">
           <Link href="/cases/new?tool=ask" onClick={() => setMobileOpen(false)} className={cn(
-            "mt-8 flex h-12 items-center justify-center gap-2 rounded-lg bg-forest px-4 py-3 text-sm font-semibold text-white hover:bg-emerald",
+            "flex h-11 sm:h-12 items-center justify-center gap-2 rounded-lg bg-forest px-4 py-2.5 sm:py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald active:scale-95 transition-all",
             collapsed && "px-0"
           )}>
             <Plus size={18} /> {!collapsed && t("nav.new_query")}
           </Link>
         </div>
 
-        <nav className="mt-7 space-y-1.5 px-4" aria-label="Primary navigation">
-          {primary.map(item => {
-            const Icon = item.icon;
-            const active = activeKey === item.key;
-            return (
-              <Link key={item.key} href={item.href} onClick={() => setMobileOpen(false)} title={collapsed ? t(item.label) : undefined} className={cn(
-                "flex items-center gap-4 rounded-lg px-3 py-3 text-sm font-semibold transition",
-                collapsed && "justify-center px-0",
-                active ? "bg-[#0E4B3D] text-white shadow-sm" : "text-ink hover:bg-[#EAF1F8]"
-              )}>
-                <Icon size={20} strokeWidth={1.7} />
-                {!collapsed && t(item.label)}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="mt-3 flex-1 min-h-0 flex flex-col overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] overscroll-contain">
+          <nav className="space-y-1" aria-label="Primary navigation">
+            {primary.map(item => {
+              const Icon = item.icon;
+              const active = activeKey === item.key;
+              return (
+                <Link key={item.key} href={item.href} onClick={() => setMobileOpen(false)} title={collapsed ? t(item.label) : undefined} className={cn(
+                  "flex items-center gap-3.5 sm:gap-4 rounded-lg px-3 py-2.5 sm:py-3 text-sm font-semibold transition-colors",
+                  collapsed && "justify-center px-0",
+                  active ? "bg-[#0E4B3D] text-white shadow-sm" : "text-ink hover:bg-[#EAF1F8]"
+                )}>
+                  <Icon size={19} strokeWidth={1.8} className="shrink-0" />
+                  {!collapsed && <span className="truncate">{t(item.label)}</span>}
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className="mt-auto border-t border-[#CCD4D0] px-4 pt-4">
-          <button onClick={() => setPreferencesOpen(v => !v)} className={cn("flex w-full items-center gap-4 rounded-lg px-3 py-3 text-sm font-semibold text-ink hover:bg-[#EAF1F8]", collapsed && "justify-center px-0")} title={collapsed ? t("nav.workspace_preferences") : undefined}>
-            <Settings size={20} strokeWidth={1.7} /> {!collapsed && t("nav.workspace_preferences")}
-          </button>
-          <Link href="/profile" className={cn("flex w-full items-center gap-4 rounded-lg px-3 py-3 text-sm font-semibold text-ink hover:bg-[#EAF1F8]", collapsed && "justify-center px-0")} title={collapsed ? t("nav.research_profile") : undefined}>
-            <UserCircle size={20} strokeWidth={1.7} /> {!collapsed && t("nav.research_profile")}
-          </Link>
+          <div className="mt-auto pt-4 shrink-0">
+            <div className="border-t border-[#CCD4D0] pt-3 pb-2 space-y-1">
+              <button 
+                onClick={() => { setPreferencesOpen(v => !v); setMobileOpen(false); }} 
+                className={cn("flex w-full items-center gap-3.5 sm:gap-4 rounded-lg px-3 py-2.5 sm:py-3 text-sm font-semibold text-ink hover:bg-[#EAF1F8] transition-colors", collapsed && "justify-center px-0")} 
+                title={collapsed ? t("nav.workspace_preferences") : undefined}
+              >
+                <Settings size={19} strokeWidth={1.8} className="shrink-0" /> {!collapsed && <span className="truncate">{t("nav.workspace_preferences")}</span>}
+              </button>
+              <Link 
+                href="/profile" 
+                onClick={() => setMobileOpen(false)} 
+                className={cn("flex w-full items-center gap-3.5 sm:gap-4 rounded-lg px-3 py-2.5 sm:py-3 text-sm font-semibold text-ink hover:bg-[#EAF1F8] transition-colors", collapsed && "justify-center px-0")} 
+                title={collapsed ? t("nav.research_profile") : undefined}
+              >
+                <UserCircle size={19} strokeWidth={1.8} className="shrink-0" /> {!collapsed && <span className="truncate">{t("nav.research_profile")}</span>}
+              </Link>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {mobileOpen && <button className="fixed inset-0 z-40 bg-navy/20 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close menu overlay" />}
+      {mobileOpen && <button className="fixed inset-0 z-50 bg-navy/30 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close menu overlay" />}
 
       {preferencesOpen && (
         <div className="fixed bottom-6 left-6 z-[60] w-[320px] rounded-card border border-line bg-white p-5 shadow-xl lg:left-[300px]">
@@ -184,10 +197,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className={contentPad}>
-        <header className="sticky top-0 z-30 flex min-h-[69px] items-center gap-3 border-b border-[#CCD4D0] bg-[#EEF5FF]/95 px-[15px] backdrop-blur">
-          <button className="rounded-lg p-2 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={21} /></button>
+        <header className="sticky top-0 z-30 flex h-14 sm:min-h-[69px] items-center gap-2 sm:gap-3 border-b border-[#CCD4D0] bg-[#EEF5FF]/95 px-3 sm:px-[15px] backdrop-blur">
+          <button className="rounded-lg p-1.5 sm:p-2 text-ink hover:bg-white lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={20} /></button>
           <button className="hidden rounded-lg p-2 text-ink hover:bg-white lg:block" onClick={() => setCollapsed(v => !v)} aria-label="Toggle sidebar"><PanelLeftClose size={19} /></button>
-          <div className="serif hidden text-[26px] text-forest md:block">IP-SAKTI Sahayak</div>
+          <div className="serif flex items-center gap-2 text-lg sm:text-[24px] text-forest">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-forest text-white lg:hidden"><Leaf size={15} /></span>
+            <span>IP-SAKTI</span> <span className="hidden sm:inline">Sahayak</span>
+          </div>
           <div className="hidden h-full items-center gap-1 md:flex" role="group" aria-label="Global jurisdiction preference">
             {(["INDIA"] as Jurisdiction[]).map(item => (
               <button key={item} type="button" onClick={() => saveJurisdiction(item)} className={cn("rounded-lg px-3 py-2 text-sm font-semibold", jurisdiction === item ? "bg-white text-forest shadow-sm" : "text-ink/55 hover:bg-white/70")}>
@@ -195,7 +211,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             ))}
           </div>
-          <div className="ml-auto flex items-center gap-2 md:gap-3">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
             <div className="hidden w-[290px] items-center gap-2 rounded-full border border-[#BFC6C1] bg-white px-4 py-2 md:flex">
               <Search size={16} className="text-ink/45" />
               <input aria-label="Search cases" value={search} onChange={e => handleSearch(e.target.value)} className="w-full border-0 bg-transparent p-0 text-sm outline-none" placeholder={t("nav.search_placeholder")} />
@@ -204,17 +220,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="relative" ref={languageRef}>
               <button 
                 type="button" 
-                className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-ink hover:bg-white" 
+                className="flex items-center gap-1 rounded-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-ink hover:bg-white" 
                 onClick={() => setLanguageOpen(!languageOpen)}
               >
-                <Globe2 size={18} />
-                <span className="hidden md:inline">{LANGUAGES.find(l => l.name === language)?.native ?? language}</span>
-                {isTranslating && <span className="hidden md:inline text-xs text-ink/45">…</span>}
-                <ChevronDown size={14} className="text-ink/60" />
+                <Globe2 size={16} className="sm:size-[18px]" />
+                <span className="hidden sm:inline">{LANGUAGES.find(l => l.name === language)?.native ?? language}</span>
+                {isTranslating && <span className="hidden md:inline text-xs text-ink/45">â€¦</span>}
+                <ChevronDown size={13} className="text-ink/60" />
               </button>
 
               {languageOpen && (
-                <div className="absolute right-0 top-full mt-1 max-h-[75vh] w-64 overflow-y-auto rounded-xl border border-line bg-white shadow-xl z-50">
+                <div className="absolute right-0 top-full mt-1.5 max-h-[65vh] w-[min(280px,calc(100vw-24px))] overflow-y-auto rounded-xl border border-line bg-white shadow-xl z-50">
                   <div className="sticky top-0 bg-white p-2 border-b border-line/60 z-10 backdrop-blur-sm">
                     <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#F4F6F4] text-xs">
                       <Search size={13} className="text-ink/40 shrink-0" />
@@ -273,27 +289,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <button 
                 type="button" 
                 onClick={() => setProfileOpen(!profileOpen)} 
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-mist text-navy transition-colors hover:bg-[#EAF1F8] border border-transparent hover:border-line shadow-sm" 
+                className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-mist text-navy transition-colors hover:bg-[#EAF1F8] border border-transparent hover:border-line shadow-sm" 
                 aria-label="User profile"
               >
-                <UserCircle size={21} />
+                <UserCircle size={19} className="sm:size-[21px]" />
               </button>
               
               {profileOpen && (
-                <div className="absolute right-0 top-full mt-3 flex h-[380px] w-[350px] flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-2xl transition-all origin-top-right">
+                <div className="absolute right-0 top-full mt-2 flex max-h-[85vh] w-[min(330px,calc(100vw-20px))] flex-col overflow-y-auto rounded-2xl border border-line bg-white shadow-2xl transition-all origin-top-right z-50">
                   {/* Banner & Avatar section */}
-                  <div className="relative h-[90px] bg-gradient-to-r from-[#0E4B3D] via-[#166752] to-[#1a7a63]">
-                    <div className="absolute -bottom-10 left-6">
-                      <div className="flex h-20 w-20 items-center justify-center rounded-full border-[4px] border-white bg-mist text-3xl font-bold text-navy shadow-sm">
-                        {user?.first_name ? user.first_name[0].toUpperCase() : (user?.email?.[0].toUpperCase() || <UserCircle size={40} />)}
+                  <div className="relative h-[80px] sm:h-[90px] bg-gradient-to-r from-[#0E4B3D] via-[#166752] to-[#1a7a63]">
+                    <div className="absolute -bottom-9 left-5 sm:left-6">
+                      <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full border-[3px] sm:border-[4px] border-white bg-mist text-2xl sm:text-3xl font-bold text-navy shadow-sm">
+                        {user?.first_name ? user.first_name[0].toUpperCase() : (user?.email?.[0].toUpperCase() || <UserCircle size={36} />)}
                       </div>
                     </div>
                   </div>
                   
-                  <div className="mt-12 flex flex-1 flex-col px-6">
+                  <div className="mt-10 sm:mt-12 flex flex-1 flex-col px-5 sm:px-6">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="serif text-[22px] font-bold text-forest leading-tight">
+                        <h3 className="serif text-xl sm:text-[22px] font-bold text-forest leading-tight">
                           {user?.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : t("common.research_preferences", "Researcher")}
                         </h3>
                         <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-navy/70">
@@ -302,35 +318,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       </div>
                     </div>
 
-                    <div className="mt-6 space-y-3">
-                      <div className="flex items-center gap-3 rounded-xl border border-[#EAF1F8] bg-[#F7F9FF] p-3 transition-colors hover:border-line hover:bg-mist/50">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-navy shadow-sm"><Mail size={15} /></div>
+                    <div className="mt-4 sm:mt-6 space-y-2.5 sm:space-y-3">
+                      <div className="flex items-center gap-3 rounded-xl border border-[#EAF1F8] bg-[#F7F9FF] p-2.5 sm:p-3 transition-colors hover:border-line hover:bg-mist/50">
+                        <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white text-navy shadow-sm"><Mail size={14} /></div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("common.email_address", "Email Account")}</p>
-                          <p className="truncate text-sm font-semibold text-ink">{user?.email || t("Not signed in")}</p>
+                          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("common.email_address", "Email Account")}</p>
+                          <p className="truncate text-xs sm:text-sm font-semibold text-ink">{user?.email || t("Not signed in")}</p>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3 rounded-xl border border-[#EAF1F8] bg-[#F7F9FF] p-3 transition-colors hover:border-line hover:bg-mist/50">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-navy shadow-sm"><Boxes size={15} /></div>
+                      <div className="flex items-center gap-3 rounded-xl border border-[#EAF1F8] bg-[#F7F9FF] p-2.5 sm:p-3 transition-colors hover:border-line hover:bg-mist/50">
+                        <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white text-navy shadow-sm"><Boxes size={14} /></div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("Workspace ID")}</p>
-                          <p className="truncate font-mono text-xs font-medium text-ink/70">{user?.id || "N/A"}</p>
+                          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-ink/45">{t("Workspace ID")}</p>
+                          <p className="truncate font-mono text-[11px] sm:text-xs font-medium text-ink/70">{user?.id || "N/A"}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex gap-3 border-t border-line bg-[#F8FAFD] p-5">
-                    <Link href="/profile" onClick={() => setProfileOpen(false)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 py-2.5 text-sm font-bold text-navy shadow-sm transition-colors hover:bg-mist hover:text-forest">
-                      <Settings size={16} /> {t("Manage")}
+                  <div className="mt-4 flex gap-2.5 sm:gap-3 border-t border-line bg-[#F8FAFD] p-3.5 sm:p-5">
+                    <Link href="/profile" onClick={() => setProfileOpen(false)} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3 py-2 text-xs sm:text-sm font-bold text-navy shadow-sm transition-colors hover:bg-mist hover:text-forest">
+                      <Settings size={15} /> {t("Manage")}
                     </Link>
                     <button 
                       onClick={() => {
                         clearSession();
                         router.push("/auth/login");
                       }} 
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-forest"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-navy px-3 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition-colors hover:bg-forest"
                     >
                       {t("common.sign_out", "Log out")}
                     </button>
@@ -340,8 +356,93 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="w-full px-[15px] py-7">{children}</main>
+
+        <main className="w-full px-3 py-3.5 sm:px-[15px] sm:py-7 pb-24 lg:pb-7">{children}</main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-40 grid grid-cols-5 h-[62px] items-center border-t border-[#CCD4D0] bg-white/95 px-1 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-md lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.04)]"
+        aria-label="Mobile navigation"
+      >
+        <Link
+          href="/dashboard"
+          className={cn(
+            "flex flex-col items-center justify-center h-full w-full py-1 text-center group transition-colors select-none",
+            activeKey === "dashboard" ? "text-forest" : "text-ink/65 hover:text-forest"
+          )}
+        >
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg transition-transform group-active:scale-95">
+            <Boxes size={19} strokeWidth={activeKey === "dashboard" ? 2.3 : 1.7} />
+          </div>
+          <span className={cn("mt-0.5 block max-w-full truncate px-0.5 text-[10px] leading-tight", activeKey === "dashboard" ? "font-bold text-forest" : "font-medium")}>
+            {t("nav.dashboard", "Dashboard")}
+          </span>
+        </Link>
+
+        <Link
+          href="/cases/new?tool=ask"
+          className={cn(
+            "flex flex-col items-center justify-center h-full w-full py-1 text-center group transition-colors select-none",
+            pathname.startsWith("/cases/new") ? "text-forest" : "text-ink/65 hover:text-forest"
+          )}
+        >
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-forest text-white shadow-sm transition-transform group-active:scale-90 hover:bg-emerald">
+            <Plus size={18} strokeWidth={2.4} />
+          </div>
+          <span className={cn("mt-0.5 block max-w-full truncate px-0.5 text-[10px] leading-tight", pathname.startsWith("/cases/new") ? "font-bold text-forest" : "font-medium text-ink/75")}>
+            {t("nav.new_case_short", "New Case")}
+          </span>
+        </Link>
+
+        <Link
+          href="/archive"
+          className={cn(
+            "flex flex-col items-center justify-center h-full w-full py-1 text-center group transition-colors select-none",
+            activeKey === "saved" ? "text-forest" : "text-ink/65 hover:text-forest"
+          )}
+        >
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg transition-transform group-active:scale-95">
+            <BookOpen size={19} strokeWidth={activeKey === "saved" ? 2.3 : 1.7} />
+          </div>
+          <span className={cn("mt-0.5 block max-w-full truncate px-0.5 text-[10px] leading-tight", activeKey === "saved" ? "font-bold text-forest" : "font-medium")}>
+            {t("nav.archive_short", "Archive")}
+          </span>
+        </Link>
+
+        <Link
+          href="/compare"
+          className={cn(
+            "flex flex-col items-center justify-center h-full w-full py-1 text-center group transition-colors select-none",
+            activeKey === "compare" ? "text-forest" : "text-ink/65 hover:text-forest"
+          )}
+        >
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg transition-transform group-active:scale-95">
+            <Globe2 size={19} strokeWidth={activeKey === "compare" ? 2.3 : 1.7} />
+          </div>
+          <span className={cn("mt-0.5 block max-w-full truncate px-0.5 text-[10px] leading-tight", activeKey === "compare" ? "font-bold text-forest" : "font-medium")}>
+            {t("nav.compare_short", "Compare")}
+          </span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className={cn(
+            "flex flex-col items-center justify-center h-full w-full py-1 text-center group transition-colors select-none",
+            mobileOpen ? "text-forest" : "text-ink/65 hover:text-forest"
+          )}
+          aria-label={t("nav.more_short", "More")}
+        >
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg transition-transform group-active:scale-95">
+            <Menu size={19} strokeWidth={mobileOpen ? 2.2 : 1.8} />
+          </div>
+          <span className={cn("mt-0.5 block max-w-full truncate px-0.5 text-[10px] leading-tight", mobileOpen ? "font-bold text-forest" : "font-medium")}>
+            {t("nav.more_short", "More")}
+          </span>
+        </button>
+      </nav>
+
       {!isAuthRoute && <FloatingAIChat />}
     </div>
   );
