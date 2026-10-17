@@ -5,7 +5,16 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: "/auth/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "unsafe-none"
+          }
+        ]
+      },
+      {
+        source: "/((?!auth).*)",
         headers: [
           {
             key: "Cross-Origin-Opener-Policy",

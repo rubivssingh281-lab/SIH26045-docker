@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { authApi, getApiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/components/providers";
 import { useLanguage } from "@/components/providers/language-provider";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "firebase/auth";
 
 const OTP_LENGTH = 6;
 const OTP_TTL = 60;
@@ -63,7 +65,17 @@ export default function LoginPage() {
       const names = (googleUser.displayName || "").split(" ");
       const firstName = names[0] || "Researcher";
       const lastName = names.slice(1).join(" ") || "";
-      const idToken = await googleUser.getIdToken();
+      
+      // Fast non-blocking ID token retrieval with a 2.5s safety timeout
+      let idToken = "";
+      try {
+        idToken = await Promise.race([
+          googleUser.getIdToken(false),
+          new Promise<string>((_, reject) => setTimeout(() => reject(new Error("ID_TOKEN_TIMEOUT")), 2500))
+        ]);
+      } catch {
+        idToken = "";
+      }
 
       const result = await authApi.googleLogin({
         email: googleUser.email || "",
@@ -88,10 +100,11 @@ export default function LoginPage() {
   useEffect(() => {
     let isMounted = true;
     async function handlePendingRedirect() {
-      try {
-        const { getRedirectResult, onAuthStateChanged } = await import("firebase/auth");
-        const { auth } = await import("@/lib/firebase");
+      // Only check redirect result if a redirect was initiated by this app
+      const isPending = typeof window !== "undefined" && sessionStorage.getItem("ip_sakti_google_pending") === "1";
+      if (!isPending) return;
 
+      try {
         const userCred = await getRedirectResult(auth);
         if (userCred?.user && isMounted) {
           sessionStorage.removeItem("ip_sakti_google_pending");
@@ -99,20 +112,19 @@ export default function LoginPage() {
           return;
         }
 
-        if (typeof window !== "undefined" && sessionStorage.getItem("ip_sakti_google_pending") === "1") {
-          const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user && isMounted) {
-              sessionStorage.removeItem("ip_sakti_google_pending");
-              unsubscribe();
-              await processGoogleUser(user);
-            }
-          });
-          setTimeout(() => {
-            if (isMounted) sessionStorage.removeItem("ip_sakti_google_pending");
-          }, 6000);
-        }
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (user && isMounted) {
+            sessionStorage.removeItem("ip_sakti_google_pending");
+            unsubscribe();
+            await processGoogleUser(user);
+          }
+        });
+        setTimeout(() => {
+          if (isMounted) sessionStorage.removeItem("ip_sakti_google_pending");
+        }, 5000);
       } catch (err) {
         console.error("Google redirect handling error", err);
+        sessionStorage.removeItem("ip_sakti_google_pending");
       }
     }
     handlePendingRedirect();
@@ -167,21 +179,66 @@ export default function LoginPage() {
 
   async function handleGoogleSignIn() {
     setError(""); setInfo(""); setLoading(true);
-    try {
-      const { signInWithPopup, signInWithRedirect } = await import("firebase/auth");
-      const { auth, googleProvider } = await import("@/lib/firebase");
+
+    const isMobile = typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
       try {
-        const userCred = await signInWithPopup(auth, googleProvider);
-        if (userCred?.user) {
+        sessionStorage.setItem("ip_sakti_google_pending", "1");
+        await signInWithRedirect(auth, googleProvider);
+      } catch (err: any) {
+        if (err?.code === "auth/unauthorized-domain") {
+          setError("Domain not authorized in Firebase Console. Add this domain under Authentication > Settings > Authorized Domains.");
+        } else {
+          setError(getApiErrorMessage(err, "Could not sign in with Google."));
+        }
+        setLoading(false);
+      }
+      return;
+    }
+
+    try {
+      let resolved = false;
+
+      // Parallel listener: the instant Firebase updates auth state locally (usually 1-2s),
+      // we grab the user immediately, bypassing any popup-closing or postMessage delays!
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user && !resolved) {
+          resolved = true;
+          unsubscribe();
+          await processGoogleUser(user);
+        }
+      });
+
+      // Synchronous popup execution preserved by synchronous handler call
+      const popupPromise = signInWithPopup(auth, googleProvider);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("POPUP_TIMEOUT")), 25000)
+      );
+
+      try {
+        const userCred = await Promise.race([popupPromise, timeoutPromise]) as any;
+        if (userCred?.user && !resolved) {
+          resolved = true;
+          unsubscribe();
           await processGoogleUser(userCred.user);
           return;
         }
       } catch (popupErr: any) {
+        unsubscribe();
+        if (resolved) return;
+
         if (popupErr?.code === "auth/popup-closed-by-user") {
           setLoading(false);
           return;
         }
-        if (popupErr?.code === "auth/popup-blocked" || popupErr?.code === "auth/cancelled-popup-request") {
+
+        // If popup was blocked or timed out, immediately fallback to redirect without freezing
+        if (
+          popupErr?.message === "POPUP_TIMEOUT" ||
+          popupErr?.code === "auth/popup-blocked" ||
+          popupErr?.code === "auth/cancelled-popup-request"
+        ) {
           sessionStorage.setItem("ip_sakti_google_pending", "1");
           await signInWithRedirect(auth, googleProvider);
           return;
